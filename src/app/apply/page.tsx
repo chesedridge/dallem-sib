@@ -115,6 +115,12 @@ const QUESTIONS = [
 ] as const;
 
 const DEFAULT_DEBUG_ANSWERS = Array.from({ length: QUESTIONS.length }, () => 1);
+const DEFAULT_DEBUG_INFO: RespondentInfo = {
+  nickname: "디버그 사용자",
+  contact: "01012345678",
+  residence: DEFAULT_DEBUG_RESIDENCE,
+  privacyConsent: true,
+};
 
 const ANSWER_OPTIONS: AnswerOption[] = [
   { label: "없음", score: 0 },
@@ -255,6 +261,37 @@ export default function TestPage() {
     setSubmitError("");
   };
 
+  const buildDebugInfo = (): RespondentInfo => ({
+    nickname: info.nickname.trim() || DEFAULT_DEBUG_INFO.nickname,
+    contact: PHONE_PATTERN.test(info.contact.trim())
+      ? info.contact.trim()
+      : DEFAULT_DEBUG_INFO.contact,
+    residence: info.residence || DEFAULT_DEBUG_INFO.residence,
+    privacyConsent: info.privacyConsent || DEFAULT_DEBUG_INFO.privacyConsent,
+  });
+
+  const fillDebugForm = (nextStep: Exclude<FormStep, "intro" | "question"> = "info") => {
+    const nextAnswers = answers.map((score, index) =>
+      score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index],
+    );
+    const nextInfo = buildDebugInfo();
+
+    setFieldErrors({});
+    setSubmitError("");
+    setIsSubmitting(false);
+    setAnswers(nextAnswers);
+    setInfo(nextInfo);
+
+    if (nextStep === "result") {
+      setTotalScore(nextAnswers.reduce((acc, current) => acc + current, 0));
+      setFormStep("result");
+      return;
+    }
+
+    setTotalScore(null);
+    setFormStep("info");
+  };
+
   const moveToDebugStep = (nextStep: FormStep) => {
     setFieldErrors({});
     setSubmitError("");
@@ -273,26 +310,11 @@ export default function TestPage() {
     }
 
     if (nextStep === "info") {
-      setAnswers((prev) => prev.map((score, index) => (score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index])));
-      setTotalScore(null);
-      setFormStep("info");
+      fillDebugForm("info");
       return;
     }
 
-    const nextAnswers = answers.map((score, index) =>
-      score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index],
-    );
-    const nextInfo: RespondentInfo = {
-      nickname: info.nickname.trim() || "디버그 사용자",
-      contact: PHONE_PATTERN.test(info.contact.trim()) ? info.contact.trim() : "01012345678",
-      residence: info.residence || DEFAULT_DEBUG_RESIDENCE,
-      privacyConsent: info.privacyConsent,
-    };
-
-    setAnswers(nextAnswers);
-    setInfo(nextInfo);
-    setTotalScore(nextAnswers.reduce((acc, current) => acc + current, 0));
-    setFormStep("result");
+    fillDebugForm("result");
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -383,10 +405,17 @@ export default function TestPage() {
   return (
     <div className="min-h-screen bg-[var(--color-bg-warm-light)] py-14 pb-28 md:py-20 md:pb-20">
       {isDebugMode ? (
-        <div className="fixed right-4 top-4 z-50 w-[11rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+        <div className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
-            Debug Skip
+            Debug Tools
           </p>
+          <button
+            type="button"
+            onClick={() => fillDebugForm("info")}
+            className="mt-3 w-full rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-primary-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-primary-strong)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
+          >
+            자동 채우기
+          </button>
           <div className="mt-3 grid grid-cols-2 gap-2">
             {(["intro", "question", "info", "result"] as FormStep[]).map((step) => (
               <button
