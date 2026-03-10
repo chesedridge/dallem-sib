@@ -1,3 +1,5 @@
+import CtaButton from "@/components/CtaButton";
+
 const INFO_ITEMS = [
   {
     label: "대상자",
@@ -24,41 +26,34 @@ const INFO_ITEMS = [
 
 export default function ProjectInfoSection() {
   return (
-    <section className="relative w-full bg-[var(--color-bg-warm)]">
-      <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-10 md:py-[104px]">
-        <div className="mb-[18px] text-center leading-relaxed">
-          <h2 className="text-[22px] font-bold md:text-[30px]">
-            <span className="text-[var(--color-primary)]">경기도 거주자, 직장인</span>을 위한
+    <section className="relative w-full bg-bg-warm-light">
+      <div className="page-shell">
+        <div className="mb-10 text-center leading-relaxed md:mb-14">
+          <h2 className="section-heading">
+            <span className="text-primary-strong">경기도 거주자, 직장인</span>을 위한
             <br />
             멘탈케어 프로젝트
           </h2>
         </div>
 
-        <div className="mb-6 flex flex-col gap-2 md:mx-auto md:max-w-[70%]">
+        <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-4 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-20 md:py-6">
           {INFO_ITEMS.map((item) => (
             <div
               key={item.label}
-              className="flex items-start gap-2 rounded-xl bg-white p-[15px] md:px-10 md:py-5"
+              className="flex items-center gap-3 py-3 md:gap-4 md:py-4"
             >
-              <span className="shrink-0 basis-[25%] text-[15px] font-bold text-[var(--color-primary)] md:basis-[15%] md:text-[22px]">
+              <span className="shrink-0 rounded-full bg-primary-pale px-4 py-1.5 text-[13px] font-bold text-primary-strong md:px-5 md:py-2 md:text-[16px]">
                 {item.label}
               </span>
-              <span className="shrink-0 basis-[75%] text-[15px] text-[var(--color-text-body)] md:basis-[50%] md:text-[22px]">
+              <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">
                 {item.value}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="mt-5 text-center">
-          <a
-            href="https://clify-app.web.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block rounded-full bg-[var(--color-primary)] px-10 py-4 text-center text-[18px] font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#e06f05]"
-          >
-            상담 신청하러 가기
-          </a>
+        <div className="section-cta">
+          <CtaButton>상담 신청하러 가기</CtaButton>
         </div>
       </div>
     </section>

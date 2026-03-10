@@ -7,6 +7,7 @@ import DataSection from "@/components/DataSection";
 import ProcedureSection from "@/components/ProcedureSection";
 import FAQSection from "@/components/FAQSection";
 import FooterSection from "@/components/FooterSection";
+import DisclaimerSection from "@/components/DisclaimerSection";
 
 export default function Home() {
   return (
@@ -14,12 +15,11 @@ export default function Home() {
       <HeroSection />
       <ProjectInfoSection />
       <BarriersSection />
-      <BenefitImagesSection />
       <DataSection />
 
       <ProcedureSection />
       <FAQSection />
-      <FooterSection />
+      <DisclaimerSection />
     </main>
   );
 }

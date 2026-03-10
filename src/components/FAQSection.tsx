@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CtaButton from "@/components/CtaButton";
 
 interface FAQItem {
   question: string;
@@ -59,66 +60,55 @@ export default function FAQSection() {
   };
 
   return (
-    <section className="relative w-full bg-[var(--color-bg-white)]">
-      <div className="mx-auto max-w-[1200px] px-5 py-10 md:px-10 md:py-[104px]">
-        <div className="flex flex-col gap-[30px] md:flex-row md:items-start md:gap-[60px]">
-          <div className="text-center md:min-w-[280px] md:text-left">
-            <h2 className="text-[22px] font-bold leading-relaxed text-[var(--color-text-body)] md:text-[36px]">
-              FAQ
-              <br />
-              자주하는 질문
-            </h2>
-          </div>
+    <section className="relative w-full bg-bg-warm-light">
+      <div className="page-shell">
+        <div className="mb-8 text-center md:mb-10">
+          <h2 className="section-heading">
+            자주하는 질문
+          </h2>
+        </div>
 
-          <div className="flex-1">
-            {FAQ_ITEMS.map((item, index) => (
-              <div
-                key={index}
-                className="border-b border-[#eee]"
+        <div className="mx-auto max-w-[1000px]">
+          {FAQ_ITEMS.map((item, index) => (
+            <div
+              key={index}
+              className="border-b border-border-soft"
+            >
+              <button
+                className="flex w-full cursor-pointer items-center justify-between gap-4 border-none bg-transparent py-5 text-left text-[15px] font-semibold leading-7 tracking-[-0.02em] text-text-body transition-colors hover:text-primary md:py-7 md:text-[20px] md:leading-8"
+                onClick={() => toggleFAQ(index)}
+                type="button"
               >
-                <button
-                  className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-transparent py-5 text-left text-[16px] font-semibold text-[var(--color-text-body)] transition-colors hover:text-[var(--color-primary)] md:py-6 md:text-[18px]"
-                  onClick={() => toggleFAQ(index)}
-                  type="button"
-                >
-                  <span>{item.question}</span>
-                  <span className={`shrink-0 text-[24px] leading-none text-[var(--color-text-sub)] transition-transform duration-300 ${openIndex === index ? "rotate-45" : ""}`}>
-                    +
-                  </span>
-                </button>
-                <div
-                  className={`overflow-hidden transition-all duration-300 ${
-                    openIndex === index ? "max-h-[500px] pb-5" : "max-h-0"
-                  }`}
-                >
-                  {item.answer.map((line, i) => (
-                    <p key={i} className="text-[16px] leading-[1.6] text-[var(--color-text-sub)] md:text-[18px]">
-                      {line}
-                    </p>
-                  ))}
-                </div>
+                <span>{item.question}</span>
+                <span className={`shrink-0 text-[24px] leading-none text-primary-strong transition-transform duration-300 ${openIndex === index ? "rotate-45" : ""}`}>
+                  +
+                </span>
+              </button>
+              <div
+                className={`overflow-hidden transition-all duration-300 ${
+                  openIndex === index ? "max-h-[500px] pb-5" : "max-h-0"
+                }`}
+              >
+                {item.answer.map((line, i) => (
+                  <p key={i} className="px-1 text-left text-[15px] leading-7 text-text-sub md:px-4 md:text-[16px] md:leading-8">
+                    {line}
+                  </p>
+                ))}
               </div>
-            ))}
-
-            <div className="mt-[30px] text-center text-[13px] leading-relaxed text-[var(--color-text-sub)] md:text-left md:text-[18px]">
-              <p>
-                「경기도 직장인을 위한 멘탈케어 프로젝트」 지원사업에 관해 더
-                궁금하신 점은 무엇이든지 편하게 아래를 통해 문의해 주세요.
-              </p>
-              <p className="mt-2">이메일 : support@clify.co.kr</p>
             </div>
+          ))}
+
+          <div className="mt-10 text-center text-[16px] leading-6 text-text-sub md:mt-14 md:text-[16px] md:leading-7">
+            <p>
+              「경기도 직장인을 위한 멘탈케어 프로젝트」 지원사업에 관해 더
+              궁금하신 점은 무엇이든지 편하게 아래를 통해 문의해 주세요.
+            </p>
+            <p className="mt-1">이메일 : help@dallem.com</p>
           </div>
         </div>
 
-        <div className="mt-[30px] text-center">
-          <a
-            href="https://clify-app.web.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block rounded-full bg-[var(--color-primary)] px-10 py-4 text-center text-[18px] font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#e06f05]"
-          >
-            상담 신청하러 가기
-          </a>
+        <div className="section-cta">
+          <CtaButton>상담 신청하러 가기</CtaButton>
         </div>
       </div>
     </section>

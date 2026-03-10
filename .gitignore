@@ -44,3 +44,5 @@ next-env.d.ts
 # original 
 archive_files
 archive.html
+
+.playwright-cli/
