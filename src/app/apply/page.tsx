@@ -37,7 +37,7 @@ type InfoField = {
   pattern?: string;
 };
 
-type FormStep = "intro" | "question" | "info";
+type FormStep = "intro" | "question" | "info" | "result";
 
 const INFO_FIELDS: InfoField[] = [
   {
@@ -98,6 +98,8 @@ const INFO_FIELDS: InfoField[] = [
   },
 ];
 
+const DEFAULT_DEBUG_RESIDENCE =
+  INFO_FIELDS.find((field) => field.key === "residence")?.options?.[0] ?? "";
 const PHONE_PATTERN = /^010\d{7,8}$/;
 
 const QUESTIONS = [
@@ -111,6 +113,8 @@ const QUESTIONS = [
   "신문을 읽거나 TV를 보는 것과 같은 일상적인 일에도 집중할 수가 없었다.",
   "차라리 죽는 것이 더 낫겠다고 생각했다. / 혹은 자해할 생각을 했다.",
 ] as const;
+
+const DEFAULT_DEBUG_ANSWERS = Array.from({ length: QUESTIONS.length }, () => 1);
 
 const ANSWER_OPTIONS: AnswerOption[] = [
   { label: "없음", score: 0 },
@@ -131,14 +135,14 @@ const RESULT_BANDS: ResultBand[] = [
     max: 9,
     title: "5~9점 : 가벼운 우울",
     description:
-      "다소 경미한 수준의 우울감이 있으나 일상생활에 지장을 줄 정도는 아닙니다. 다만, 이러한 기분상태가 지속되면 개인의 신체적, 심리적 대처 자원을 저하시킬 수 있습니다. 그런 경우 가까운 정신건강복지센터나 정신건강의학과를 방문하거나 1577-0199(24시간 정신건강위기상담전화)를 이용하시기 바랍니다.",
+      "다소 경미한 수준의 우울감이 있으나 일상생활에 지장을 줄 정도는 아닙니다. 다만, 이러한 기분상태가 지속되면 개인의 신체적, 심리적 대처 자원을 저하시킬 수 있습니다.",
   },
   {
     min: 10,
     max: 19,
     title: "10~19점 : 중간정도의 우울",
     description:
-      "중간 정도 수준의 우울감이 시사됩니다. 이러한 수준의 우울감은 흔히 신체적, 심리적 대처 자원을 저하시키며 개인의 일상생활을 어렵게 만들기도 합니다. 가까운 정신신건강의학과를 방문하거나 1577-0199(24시간 정신건강위기상담전화)를 이용하시기 바랍니다.",
+      "중간 정도 수준의 우울감이 시사됩니다. 이러한 수준의 우울감은 흔히 신체적, 심리적 대처 자원을 저하시키며 개인의 일상생활을 어렵게 만들기도 합니다.",
   },
   {
     min: 20,
@@ -157,6 +161,7 @@ function findResultBand(totalScore: number) {
 }
 
 export default function TestPage() {
+  const isDebugMode = process.env.NODE_ENV !== "production";
   const [formStep, setFormStep] = useState<FormStep>("intro");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
@@ -170,6 +175,8 @@ export default function TestPage() {
   const [totalScore, setTotalScore] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<RespondentInfoErrors>({});
   const [showProgressPanel, setShowProgressPanel] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const questionSectionRef = useRef<HTMLElement | null>(null);
 
   const resultBand = useMemo(() => {
@@ -181,10 +188,12 @@ export default function TestPage() {
   }, [totalScore]);
   const answeredCount = answers.filter((score) => score >= 0).length;
   const isQuestionStepComplete = answeredCount === QUESTIONS.length;
+  const showQuestionProgress = formStep === "question" && !isQuestionStepComplete;
   const questionProgressLabel = `${QUESTIONS.length}개중 ${answeredCount}개 완료`;
-  const primaryButtonLabel = formStep === "question" ? "다음으로" : "결과보기";
-  const isPrimaryButtonDisabled = formStep === "question" && !isQuestionStepComplete;
-  const scoreGaugePercent = totalScore === null ? 0 : Math.round((totalScore / 27) * 100);
+  const primaryButtonLabel =
+    formStep === "question" ? "다음으로" : isSubmitting ? "저장 중..." : "결과보기";
+  const isPrimaryButtonDisabled =
+    isSubmitting || showQuestionProgress;
   const resultBadgeClass =
     totalScore !== null && totalScore >= 20
       ? "bg-[var(--color-primary)] text-white"
@@ -243,9 +252,50 @@ export default function TestPage() {
     const nextValue = key === "contact" ? value.replace(/\D/g, "").slice(0, 11) : value;
     setInfo((prev) => ({ ...prev, [key]: nextValue }));
     clearFieldError(key);
+    setSubmitError("");
   };
 
-  const submit = (event: FormEvent<HTMLFormElement>) => {
+  const moveToDebugStep = (nextStep: FormStep) => {
+    setFieldErrors({});
+    setSubmitError("");
+    setIsSubmitting(false);
+
+    if (nextStep === "intro") {
+      setTotalScore(null);
+      setFormStep("intro");
+      return;
+    }
+
+    if (nextStep === "question") {
+      setTotalScore(null);
+      setFormStep("question");
+      return;
+    }
+
+    if (nextStep === "info") {
+      setAnswers((prev) => prev.map((score, index) => (score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index])));
+      setTotalScore(null);
+      setFormStep("info");
+      return;
+    }
+
+    const nextAnswers = answers.map((score, index) =>
+      score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index],
+    );
+    const nextInfo: RespondentInfo = {
+      nickname: info.nickname.trim() || "디버그 사용자",
+      contact: PHONE_PATTERN.test(info.contact.trim()) ? info.contact.trim() : "01012345678",
+      residence: info.residence || DEFAULT_DEBUG_RESIDENCE,
+      privacyConsent: info.privacyConsent,
+    };
+
+    setAnswers(nextAnswers);
+    setInfo(nextInfo);
+    setTotalScore(nextAnswers.reduce((acc, current) => acc + current, 0));
+    setFormStep("result");
+  };
+
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (formStep === "question") {
@@ -274,10 +324,6 @@ export default function TestPage() {
       nextFieldErrors.residence = "거주지를 선택해주세요.";
     }
 
-    if (!info.privacyConsent) {
-      nextFieldErrors.privacyConsent = "개인정보 수집 및 이용에 동의해주세요.";
-    }
-
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       return;
@@ -290,11 +336,72 @@ export default function TestPage() {
 
     setFieldErrors({});
     const score = answers.reduce((acc, current) => acc + current, 0);
-    setTotalScore(score);
+    const nextResultBand = findResultBand(score);
+
+    try {
+      setIsSubmitting(true);
+      setSubmitError("");
+
+      const response = await fetch("/api/survey-results", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nickname: info.nickname.trim(),
+          contact: info.contact.trim(),
+          residence: info.residence,
+          privacyConsent: info.privacyConsent,
+          answers,
+          totalScore: score,
+          resultTitle: nextResultBand.title,
+          resultDescription: nextResultBand.description,
+        }),
+      });
+
+      const responseBody = (await response.json().catch(() => null)) as
+        | { message?: string }
+        | null;
+
+      if (!response.ok) {
+        setSubmitError(
+          responseBody?.message ??
+            "응답 저장에 실패했습니다. 잠시 후 다시 시도해주세요.",
+        );
+        return;
+      }
+
+      setTotalScore(score);
+      setFormStep("result");
+    } catch {
+      setSubmitError("응답 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[var(--color-bg-warm-light)] py-14 pb-28 md:py-20 md:pb-20">
+      {isDebugMode ? (
+        <div className="fixed right-4 top-4 z-50 w-[11rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
+            Debug Skip
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {(["intro", "question", "info", "result"] as FormStep[]).map((step) => (
+              <button
+                key={step}
+                type="button"
+                onClick={() => moveToDebugStep(step)}
+                className="rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-3 py-2 text-xs font-semibold text-[var(--color-text-body)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
+              >
+                {step}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       {formStep === "question" && showProgressPanel ? (
         <div className="pointer-events-none fixed left-1/2 top-3 z-40 hidden w-[calc(100vw-4rem)] max-w-[60rem] -translate-x-1/2 md:block">
           <section className="pointer-events-auto w-full rounded-3xl border border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.94)] px-5 py-3 backdrop-blur-sm">
@@ -355,7 +462,9 @@ export default function TestPage() {
         <form
           id="phq-test-form"
           onSubmit={submit}
-          className={`mt-14 space-y-14 md:mt-16 md:space-y-16 ${formStep === "intro" ? "hidden" : ""}`}
+          className={`mt-14 space-y-14 md:mt-16 md:space-y-16 ${
+            formStep === "intro" || formStep === "result" ? "hidden" : ""
+          }`}
         >
           {formStep === "question" ? (
             <section ref={questionSectionRef} className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14">
@@ -506,41 +615,40 @@ export default function TestPage() {
                   );
                 })}
 
-                <div
-                  className={`mx-auto max-w-[36rem] rounded-[24px] border bg-[var(--color-bg-gray)] p-5 text-left ${
-                    fieldErrors.privacyConsent
-                      ? "border-[var(--color-primary)]"
-                      : "border-[var(--color-border-soft)]"
-                  }`}
-                >
+                <div className="mx-auto max-w-[36rem] rounded-[24px] border border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] p-5 text-left">
                   <p className="text-[15px] font-semibold text-[var(--color-text-body)] md:text-[17px]">
                     개인정보 수집 및 이용 동의
                   </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--color-text-sub)]">
-                    닉네임, 연락처, 거주지는 응답 확인 및 안내를 위해 수집되며, 관련 목적
-                    외에는 사용되지 않습니다.
-                  </p>
+                  <div className="mt-3 rounded-[18px] bg-[var(--color-bg-white)] px-4 py-4 text-sm leading-6 text-[var(--color-text-sub)]">
+                    <p className="font-semibold text-[var(--color-text-body)]">
+                      개인정보 수집 및 이용 동의서
+                    </p>
+                    <p className="mt-2">1. 개인정보의 수집•이용 목적: 상담 안내 연락 및 혜택 제공</p>
+                    <p>2. 수집하는 개인정보의 항목: 닉네임, 휴대폰 번호</p>
+                    <p>
+                      3. 개인정보의 이용 기간: 프로젝트 운영 기간
+                      <br />
+                      (2026년 4월~2027년 4월)
+                    </p>
+                    <p className="mt-3 font-semibold text-[var(--color-text-body)]">
+                      개인정보 제3자 제공 동의
+                    </p>
+                    <p className="mt-2">1. 개인정보를 제공받는 자: 헤세드릿지</p>
+                  </div>
                   <label
-                    className={`mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border bg-[var(--color-bg-white)] px-4 py-3 transition-colors ${
-                      fieldErrors.privacyConsent
-                        ? "border-[var(--color-primary)]"
-                        : "border-transparent hover:border-[var(--color-border-soft)]"
-                    }`}
+                    className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-[var(--color-bg-white)] px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]"
                   >
                     <input
                       type="checkbox"
                       name="privacyConsent"
                       checked={info.privacyConsent}
-                      aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
-                      aria-describedby={
-                        fieldErrors.privacyConsent ? "privacy-consent-error" : undefined
-                      }
                       onChange={(event) => {
                         setInfo((prev) => ({
                           ...prev,
                           privacyConsent: event.target.checked,
                         }));
                         clearFieldError("privacyConsent");
+                        setSubmitError("");
                       }}
                       className="peer sr-only"
                     />
@@ -562,19 +670,17 @@ export default function TestPage() {
                       </svg>
                     </span>
                     <span className="text-sm font-medium text-[var(--color-text-body)] transition-colors peer-checked:text-[var(--color-text-dark)]">
-                      개인정보 수집 및 이용에 동의합니다. (필수)
+                      개인정보 수집 및 이용에 동의합니다. (선택)
                     </span>
                   </label>
-                  {fieldErrors.privacyConsent ? (
-                    <p
-                      id="privacy-consent-error"
-                      className="mt-3 text-sm font-medium text-[var(--color-primary-strong)]"
-                    >
-                      {fieldErrors.privacyConsent}
-                    </p>
-                  ) : null}
                 </div>
               </div>
+
+              {submitError ? (
+                <div className="mx-auto max-w-[36rem] rounded-[20px] border border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-4 py-3 text-left text-sm font-medium text-[var(--color-primary-strong)]">
+                  {submitError}
+                </div>
+              ) : null}
             </section>
           )}
 
@@ -583,12 +689,14 @@ export default function TestPage() {
               type="submit"
               disabled={isPrimaryButtonDisabled}
               className={
-                isPrimaryButtonDisabled
+                showQuestionProgress
                   ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-5 py-4 text-[var(--color-text-body)]"
+                  : isSubmitting
+                    ? "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white opacity-70"
                   : "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
               }
             >
-              {isPrimaryButtonDisabled ? (
+              {showQuestionProgress ? (
                 <span className="flex w-full flex-col gap-2">
                   <span className="text-sm font-semibold leading-none">{questionProgressLabel}</span>
                   <span className="grid grid-cols-9 gap-1.5">
@@ -610,29 +718,9 @@ export default function TestPage() {
           </div>
         </form>
 
-        {resultBand ? (
-          <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-warm)] p-8 text-center md:mt-16 md:p-14">
-            <p className="text-sm font-semibold text-[var(--color-text-body)]">검사결과</p>
-            <div className="mt-6 grid gap-6 md:grid-cols-[240px_1fr] md:gap-8">
-              <div className="rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-6">
-                <p className="text-xs font-semibold text-[var(--color-text-sub)]">총점</p>
-                <p className="mt-3 text-5xl font-bold tracking-[-0.04em] text-[var(--color-text-dark)]">
-                  {totalScore}
-                  <span className="ml-2 text-sm font-semibold text-[var(--color-text-sub)]">
-                    / 27점
-                  </span>
-                </p>
-                <div className="mt-4 h-2 rounded-full bg-[var(--color-bg-gray)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--color-primary)] transition-all duration-300"
-                    style={{ width: `${scoreGaugePercent}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-xs font-semibold text-[var(--color-text-sub)]">
-                  {scoreGaugePercent}%
-                </p>
-              </div>
-              <div className="flex flex-col items-center">
+        {formStep === "result" && resultBand ? (
+          <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:mt-16 md:p-14">
+            <div className="mx-auto max-w-3xl text-center">
                 <p
                   className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resultBadgeClass}`}
                 >
@@ -648,25 +736,35 @@ export default function TestPage() {
                   출처: 박승진 외(2010), 한글판 우울증선별도구(Patient Health
                   Questionnaire-9, PHQ-9)의 신뢰도와 타당도.
                 </p>
-              </div>
+            </div>
+            <div className="mx-auto mt-8 max-w-3xl rounded-[28px] bg-[var(--color-bg-warm-light)] px-6 py-7 text-left">
+              <p className="text-[15px] font-semibold leading-7 text-[var(--color-text-dark)] md:text-[17px] md:leading-8">
+                아쉽지만 다행스럽게(?)도 이번 프로젝트의 대상자는 아닙니다.
+              </p>
+              <p className="mt-4 text-sm leading-6 text-[var(--color-text-body)] md:text-[15px] md:leading-7">
+                현재의 멘탈이 양호한 상태이니 앞으로도 꾸준한 관리를 통해 지금과 같은
+                멘탈 건강을 계속 유지해 나가시면 좋겠습니다.
+              </p>
             </div>
           </section>
         ) : null}
       </main>
 
-      {formStep !== "intro" ? (
+      {formStep !== "intro" && formStep !== "result" ? (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
-        <button
-          type="submit"
-          form="phq-test-form"
-          disabled={isPrimaryButtonDisabled}
-          className={
-            isPrimaryButtonDisabled
+            <button
+              type="submit"
+              form="phq-test-form"
+              disabled={isPrimaryButtonDisabled}
+              className={
+            showQuestionProgress
               ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-4 py-4 text-[var(--color-text-body)]"
+              : isSubmitting
+                ? "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white opacity-70"
               : "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white"
           }
         >
-          {isPrimaryButtonDisabled ? (
+          {showQuestionProgress ? (
             <span className="flex w-full flex-col gap-2">
               <span className="text-sm font-semibold leading-none">{questionProgressLabel}</span>
               <span className="grid grid-cols-9 gap-1.5">
