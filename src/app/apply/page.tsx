@@ -168,7 +168,7 @@ function findResultBand(totalScore: number) {
 }
 
 export default function TestPage() {
-  const isDebugMode = process.env.NODE_ENV !== "production";
+  const isDebugMode = true;
   const [formStep, setFormStep] = useState<FormStep>("intro");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
