@@ -37,18 +37,58 @@ type SurveySubmission = {
   resultDescription: string;
 };
 
+type GoogleServiceAccountJson = {
+  client_email?: string;
+  private_key?: string;
+};
+
 function sheetRange(sheetName: string, range: string) {
   const escapedSheetName = sheetName.replace(/'/g, "''");
   return `'${escapedSheetName}'!${range}`;
 }
 
+function normalizePrivateKey(privateKey?: string) {
+  if (!privateKey) {
+    return null;
+  }
+
+  const trimmedKey = privateKey.trim();
+  const withoutWrappingQuotes =
+    (trimmedKey.startsWith('"') && trimmedKey.endsWith('"')) ||
+    (trimmedKey.startsWith("'") && trimmedKey.endsWith("'"))
+      ? trimmedKey.slice(1, -1)
+      : trimmedKey;
+
+  return withoutWrappingQuotes.replace(/\\n/g, "\n").replace(/\r\n/g, "\n");
+}
+
+function parseServiceAccountJson(rawValue?: string): GoogleServiceAccountJson | null {
+  if (!rawValue) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(rawValue) as GoogleServiceAccountJson;
+  } catch {
+    return null;
+  }
+}
+
 function getGoogleSheetsConfig() {
-  const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const serviceAccountJsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
+  const decodedServiceAccountJson = serviceAccountJsonBase64
+    ? Buffer.from(serviceAccountJsonBase64, "base64").toString("utf8")
+    : undefined;
+  const serviceAccountJson =
+    parseServiceAccountJson(decodedServiceAccountJson) ??
+    parseServiceAccountJson(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  const serviceAccountEmail =
+    serviceAccountJson?.client_email ?? process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = normalizePrivateKey(
+    serviceAccountJson?.private_key ?? process.env.GOOGLE_PRIVATE_KEY,
+  );
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
   const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME ?? "Sheet1";
-
-  console.log({ serviceAccountEmail, privateKey, spreadsheetId, sheetName });
 
   if (!serviceAccountEmail || !privateKey || !spreadsheetId) {
     return null;

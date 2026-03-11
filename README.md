@@ -24,7 +24,17 @@ Survey responses from `/apply` are saved through `POST /api/survey-results`, the
 
 ### 2. Configure environment variables
 
-Copy `.env.example` to `.env.local` and fill in the values:
+Copy `.env.example` to `.env.local` and fill in the values.
+
+Recommended for servers and deployment platforms:
+
+```bash
+GOOGLE_SERVICE_ACCOUNT_JSON_BASE64=base64_encoded_service_account_json
+GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id
+GOOGLE_SHEETS_SHEET_NAME=Sheet1
+```
+
+Local fallback if you want to keep separate fields:
 
 ```bash
 GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@project.iam.gserviceaccount.com
@@ -33,7 +43,7 @@ GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id
 GOOGLE_SHEETS_SHEET_NAME=Sheet1
 ```
 
-`GOOGLE_PRIVATE_KEY` must keep escaped `\n` line breaks exactly as shown above.
+`GOOGLE_SERVICE_ACCOUNT_JSON_BASE64` is the safest option in production because it avoids PEM line-break parsing issues.
 
 ### 3. Saved columns
 
