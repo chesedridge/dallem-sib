@@ -33,7 +33,7 @@ const DEBUG_STEPS: FormStep[] = [
 ];
 
 export default function TestPage() {
-  const isDebugMode = true;
+  const isDebugMode = process.env.NODE_ENV !== "production";
   const [formStep, setFormStep] = useState<FormStep>("intro");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
