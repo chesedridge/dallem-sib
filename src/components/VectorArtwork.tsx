@@ -29,9 +29,33 @@ const TEXT = "#544541";
 const TEXT_DARK = "#231a18";
 const SURFACE = "#fffaf8";
 const SURFACE_LINE = "#e5cfca";
+const METRIC_BAR_WIDTH = 38;
+const METRIC_BAR_GAP = 10;
+const METRIC_GROUP_WIDTH = METRIC_BAR_WIDTH * 2 + METRIC_BAR_GAP;
 
 function iconClassName(className?: string) {
   return className ?? "h-6 w-6";
+}
+
+function getCenteredMetricStarts({
+  plotStart,
+  plotEnd,
+  groupCount,
+  groupGap,
+}: {
+  plotStart: number;
+  plotEnd: number;
+  groupCount: number;
+  groupGap: number;
+}) {
+  const plotWidth = plotEnd - plotStart;
+  const contentWidth =
+    METRIC_GROUP_WIDTH * groupCount + groupGap * Math.max(0, groupCount - 1);
+  const leadingOffset = Math.max(0, (plotWidth - contentWidth) / 2);
+
+  return Array.from({ length: groupCount }, (_, index) => {
+    return plotStart + leadingOffset + index * (METRIC_GROUP_WIDTH + groupGap);
+  });
 }
 
 export function PreventionBadgeIcon({ className }: IconProps) {
@@ -479,18 +503,35 @@ function Callout({
   const w = 164;
   const h = 48;
   const x = cx - w / 2;
+  const r = 12;
   const ptr = 10;
+  const ptrHalfWidth = 9;
+  const bubblePath = [
+    `M${x + r} ${y}`,
+    `H${x + w - r}`,
+    `Q${x + w} ${y} ${x + w} ${y + r}`,
+    `V${y + h - r}`,
+    `Q${x + w} ${y + h} ${x + w - r} ${y + h}`,
+    `H${cx + ptrHalfWidth}`,
+    `L${cx} ${y + h + ptr}`,
+    `L${cx - ptrHalfWidth} ${y + h}`,
+    `H${x + r}`,
+    `Q${x} ${y + h} ${x} ${y + h - r}`,
+    `V${y + r}`,
+    `Q${x} ${y} ${x + r} ${y}`,
+    "Z",
+  ].join("");
+
   return (
     <g fontFamily="Pretendard Variable, Pretendard, sans-serif" fontWeight="700">
-      <rect x={x} y={y} width={w} height={h} rx="12" fill={SURFACE} fillOpacity="0.94" stroke={SURFACE_LINE} strokeWidth="1.5" />
       <path
-        d={`M${cx - 9} ${y + h}L${cx} ${y + h + ptr}L${cx + 9} ${y + h}`}
+        d={bubblePath}
         fill={SURFACE}
         fillOpacity="0.94"
         stroke={SURFACE_LINE}
         strokeWidth="1.5"
+        strokeLinejoin="round"
       />
-      <rect x={cx - 10} y={y + h - 1} width="20" height="3" fill={SURFACE} fillOpacity="0.94" />
       <text x={cx} y={y + h / 2 + 7} textAnchor="middle" fill={color} fontSize="18">
         {text}
       </text>
@@ -533,15 +574,36 @@ function BarPair({
 
   return (
     <g fontFamily="Pretendard Variable, Pretendard, sans-serif">
-      <rect x={x} y={beforeY} width="38" height={beforeHeight} rx="19" fill="url(#beforeBar)" />
-      <rect x={x + 48} y={afterY} width="38" height={afterHeight} rx="19" fill={`url(#${afterGradientId})`} />
-      <text x={x + 19} y={beforeY - 12} fontSize="16" fontWeight="700" textAnchor="middle" fill={TEXT}>
+      <rect x={x} y={beforeY} width={METRIC_BAR_WIDTH} height={beforeHeight} rx="19" fill="url(#beforeBar)" />
+      <rect
+        x={x + METRIC_BAR_WIDTH + METRIC_BAR_GAP}
+        y={afterY}
+        width={METRIC_BAR_WIDTH}
+        height={afterHeight}
+        rx="19"
+        fill={`url(#${afterGradientId})`}
+      />
+      <text x={x + METRIC_BAR_WIDTH / 2} y={beforeY - 12} fontSize="16" fontWeight="700" textAnchor="middle" fill={TEXT}>
         {before.toFixed(1)}
       </text>
-      <text x={x + 67} y={afterY - 12} fontSize="16" fontWeight="700" textAnchor="middle" fill={afterGradientId === "afterPositive" ? CORAL : CORAL_DEEP}>
+      <text
+        x={x + METRIC_BAR_WIDTH + METRIC_BAR_GAP + METRIC_BAR_WIDTH / 2}
+        y={afterY - 12}
+        fontSize="16"
+        fontWeight="700"
+        textAnchor="middle"
+        fill={afterGradientId === "afterPositive" ? CORAL : CORAL_DEEP}
+      >
         {after.toFixed(1)}
       </text>
-      <text x={x + 44} y={baseline + 30} fontSize="18" fontWeight="700" textAnchor="middle" fill={TEXT}>
+      <text
+        x={x + METRIC_GROUP_WIDTH / 2}
+        y={baseline + 30}
+        fontSize="18"
+        fontWeight="700"
+        textAnchor="middle"
+        fill={TEXT}
+      >
         {label}
       </text>
     </g>
@@ -566,10 +628,17 @@ export function MetricChart({ kind }: MetricChartProps) {
       ];
   const maxValue = isPositive ? 76 : 70;
   const scaleMin = isPositive ? 46 : 42;
-  const starts = isPositive ? [78, 244, 410] : [56, 182, 308, 434];
   const width = 660;
   const height = 470;
   const baseline = 390;
+  const plotStart = 44;
+  const plotEnd = width - 40;
+  const starts = getCenteredMetricStarts({
+    plotStart,
+    plotEnd,
+    groupCount: data.length,
+    groupGap: isPositive ? 80 : 40,
+  });
 
   return (
     <svg
@@ -595,7 +664,7 @@ export function MetricChart({ kind }: MetricChartProps) {
       </defs>
       <rect x="1" y="1" width={width - 2} height={height - 2} rx="24" fill="#f7efed" />
       <Legend accent={accent} />
-      <path d={`M44 ${baseline}H${width - 40}`} stroke="#dbc4bf" strokeWidth="1.5" />
+      <path d={`M${plotStart} ${baseline}H${plotEnd}`} stroke="#dbc4bf" strokeWidth="1.5" />
       {starts.map((x, index) => {
         const [label, before, after] = data[index];
         return (

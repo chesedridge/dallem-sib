@@ -21,13 +21,13 @@ export default function DataSection() {
         </p>
 
         <div className="my-12 grid gap-10 md:my-20 md:grid-cols-2 md:gap-12">
-          <div className="text-center">
+          <div className="mx-auto w-full max-w-[400px] text-center md:max-w-none">
             <MetricChart kind="positive" />
             <p className="mt-4 text-center text-[15px] font-bold tracking-[-0.02em] text-text-sub md:text-[17px]">
               긍정 정서 증진 효과
             </p>
           </div>
-          <div className="text-center">
+          <div className="mx-auto w-full max-w-[400px] text-center md:max-w-none">
             <MetricChart kind="negative" />
             <p className="mt-4 text-center text-[15px] font-bold tracking-[-0.02em] text-text-sub md:text-[17px]">
               부정 정서 감소 효과
