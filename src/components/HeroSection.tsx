@@ -5,6 +5,7 @@ import {
   HeroFeatureStrip,
   MouseArrowIcon,
 } from "@/components/VectorArtwork";
+import ProjectInfoList from "./ProjectInfoList";
 
 export default function HeroSection() {
   return (
@@ -24,23 +25,16 @@ export default function HeroSection() {
             <br />
             우리와 함께 이야기해 보세요.
           </h1>
-
           <p className="mt-7 max-w-[800px] text-[15px] leading-[1.55] tracking-[-0.02em] text-primary-strong md:mt-10 md:text-[26px] md:leading-[1.4]">
-            마음의 어려움을 겪고있는 <strong className="font-bold">경기도 직장인</strong>들에게
-            <br />
-            <strong className="font-bold">전문 심리 상담 서비스를 무료로 제공합니다.</strong>
+            <strong className="font-bold">경기도민</strong> 또는{" "}
+            <strong className="font-bold">경기도 재직자</strong>라면,
+            <br />1인당 4회{" "}
+            <strong className="font-bold">무료 심리상담</strong>을 받을 수
+            있습니다.
           </p>
-
-          <div className="mt-9 w-full max-w-[360px] md:mt-12 md:max-w-[760px]">
-            <HeroFeatureStrip />
-          </div>
-
-          <p className="mt-9 text-[20px] font-extrabold tracking-[-0.03em] text-text-dark md:mt-12 md:text-[32px]">
-            부담없이 지금 시작해 보세요
-          </p>
-
+          <ProjectInfoList className="mt-7" />
           <div className="mt-7 md:mt-9">
-            <CtaButton>우울증 1분 테스트 바로가기</CtaButton>
+            <CtaButton>무료 상담 받으러 가기</CtaButton>
           </div>
         </div>
 

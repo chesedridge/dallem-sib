@@ -21,9 +21,8 @@ const FAQ_ITEMS: FAQItem[] = [
   {
     question: "Q. 정신과와는 어떻게 다른가요?",
     answer: [
-      "정신건강의학과는 주로 약물치료인 반면",
-      "본 프로그램은 심리상담을 통한 심리치료로 진행 됩니다.",
-      "또한 의료행위가 아니기 때문에 병원 기록이 남지 않습니다.",
+      "정신건강의학과는 진료, 진단, 약물치료 등을 포함한 의료기관이고,",
+      "본 프로그램은 전문 상담사와의 대화를 통해 정서적 어려움을 다루는 심리상담 서비스입니다.",
     ],
   },
   {
@@ -31,7 +30,6 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: [
       "네, 완전히 익명으로 진행돼요.",
       "연락을 위한 전화번호 외에는 어떤 개인정보도 수집하지 않아요.",
-      "이름 대신 닉네임으로도 참여 가능해요!",
     ],
   },
   {
@@ -39,7 +37,6 @@ const FAQ_ITEMS: FAQItem[] = [
     answer: [
       "상담은 100% 비대면으로 진행돼요.",
       "화상이나 전화 중에서 편하게 선택하시면 됩니다.",
-      "(화상도 얼굴 끄고 진행 가능하지만, 가능하면 화상을 추천드려요!)",
     ],
   },
   {
@@ -63,24 +60,21 @@ export default function FAQSection() {
     <section className="relative w-full bg-bg-warm-light">
       <div className="page-shell">
         <div className="mb-8 text-center md:mb-10">
-          <h2 className="section-heading">
-            자주하는 질문
-          </h2>
+          <h2 className="section-heading">자주하는 질문</h2>
         </div>
 
         <div className="mx-auto max-w-[1000px]">
           {FAQ_ITEMS.map((item, index) => (
-            <div
-              key={index}
-              className="border-b border-border-soft"
-            >
+            <div key={index} className="border-b border-border-soft">
               <button
                 className="flex w-full cursor-pointer items-center justify-between gap-4 border-none bg-transparent py-5 text-left text-[15px] font-semibold leading-7 tracking-[-0.02em] text-text-body transition-colors hover:text-primary md:py-7 md:text-[20px] md:leading-8"
                 onClick={() => toggleFAQ(index)}
                 type="button"
               >
                 <span>{item.question}</span>
-                <span className={`shrink-0 text-[24px] leading-none text-primary-strong transition-transform duration-300 ${openIndex === index ? "rotate-45" : ""}`}>
+                <span
+                  className={`shrink-0 text-[24px] leading-none text-primary-strong transition-transform duration-300 ${openIndex === index ? "rotate-45" : ""}`}
+                >
                   +
                 </span>
               </button>
@@ -90,7 +84,10 @@ export default function FAQSection() {
                 }`}
               >
                 {item.answer.map((line, i) => (
-                  <p key={i} className="px-1 text-left text-[15px] leading-7 text-text-sub md:px-4 md:text-[16px] md:leading-8">
+                  <p
+                    key={i}
+                    className="px-1 text-left text-[15px] leading-7 text-text-sub md:px-4 md:text-[16px] md:leading-8"
+                  >
                     {line}
                   </p>
                 ))}

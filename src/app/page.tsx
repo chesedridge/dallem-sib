@@ -1,19 +1,15 @@
-import HeroSection from "@/components/HeroSection";
-import ProjectInfoSection from "@/components/ProjectInfoSection";
 import BarriersSection from "@/components/BarriersSection";
-import BenefitImagesSection from "@/components/BenefitImagesSection";
 import DataSection from "@/components/DataSection";
+import HeroSection from "@/components/HeroSection";
 
-import ProcedureSection from "@/components/ProcedureSection";
-import FAQSection from "@/components/FAQSection";
-import FooterSection from "@/components/FooterSection";
 import DisclaimerSection from "@/components/DisclaimerSection";
+import FAQSection from "@/components/FAQSection";
+import ProcedureSection from "@/components/ProcedureSection";
 
 export default function Home() {
   return (
     <main>
       <HeroSection />
-      <ProjectInfoSection />
       <BarriersSection />
       <DataSection />
 

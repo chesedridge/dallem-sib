@@ -3,28 +3,28 @@ import CtaButton from "@/components/CtaButton";
 const STEPS = [
   {
     num: "01",
-    title: "테스트",
-    description: "PHQ9 우울증 테스트 진행",
+    title: "사전 검사",
+    description: "우울증 테스트 진행",
   },
   {
     num: "02",
-    title: "맞춤 상담",
-    description: "전문심리상담사 맞춤 상담을 진행해요",
+    title: "대상자 확인",
+    description: "달램에서 해당 사업 대상자 확인 및 안내",
   },
   {
     num: "03",
-    title: "선물 증정",
-    description: "상담 받고 선물받자!",
+    title: "맞춤 상담",
+    description: "1급 전문가와 1:1 심리상담",
   },
   {
     num: "04",
-    title: "최종 테스트",
-    description: "4회 상담 마무리 후 테스트 진행",
+    title: "사후 검사",
+    description: "우울증 테스트 진행",
   },
   {
     num: "05",
     title: "선물 증정",
-    description: "우울감이 나아지신 분들에게는 축하 선물이 기다리고 있답니다",
+    description: "4회를 모두 진행하고 우울감이 감소한 분 대상",
   },
 ];
 
@@ -78,7 +78,7 @@ export default function ProcedureSection() {
                     <p className="text-[20px] font-bold tracking-[-0.02em] text-text-dark">
                       {step.title}
                     </p>
-                    <p className="mx-auto mt-2 max-w-[160px] text-[16px] leading-6 text-text-sub">
+                    <p className="mx-auto mt-2 max-w-[160px] text-[16px] leading-6 text-text-sub break-keep">
                       {step.description}
                     </p>
                   </div>

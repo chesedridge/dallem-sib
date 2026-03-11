@@ -42,7 +42,7 @@ type FormStep = "intro" | "question" | "info" | "result";
 const INFO_FIELDS: InfoField[] = [
   {
     key: "nickname",
-    label: "닉네임",
+    label: "이름 (또는 닉네임)",
     type: "text",
     placeholder: "닉네임을 입력해주세요",
     autoComplete: "nickname",
@@ -161,8 +161,9 @@ const RESULT_BANDS: ResultBand[] = [
 
 function findResultBand(totalScore: number) {
   return (
-    RESULT_BANDS.find((band) => totalScore >= band.min && totalScore <= band.max) ??
-    RESULT_BANDS[0]
+    RESULT_BANDS.find(
+      (band) => totalScore >= band.min && totalScore <= band.max,
+    ) ?? RESULT_BANDS[0]
   );
 }
 
@@ -194,12 +195,16 @@ export default function TestPage() {
   }, [totalScore]);
   const answeredCount = answers.filter((score) => score >= 0).length;
   const isQuestionStepComplete = answeredCount === QUESTIONS.length;
-  const showQuestionProgress = formStep === "question" && !isQuestionStepComplete;
+  const showQuestionProgress =
+    formStep === "question" && !isQuestionStepComplete;
   const questionProgressLabel = `${QUESTIONS.length}개중 ${answeredCount}개 완료`;
   const primaryButtonLabel =
-    formStep === "question" ? "다음으로" : isSubmitting ? "저장 중..." : "결과보기";
-  const isPrimaryButtonDisabled =
-    isSubmitting || showQuestionProgress;
+    formStep === "question"
+      ? "다음으로"
+      : isSubmitting
+        ? "저장 중..."
+        : "결과보기";
+  const isPrimaryButtonDisabled = isSubmitting || showQuestionProgress;
   const resultBadgeClass =
     totalScore !== null && totalScore >= 20
       ? "bg-[var(--color-primary)] text-white"
@@ -222,8 +227,11 @@ export default function TestPage() {
         return;
       }
 
-      const nextVisible = questionSection.getBoundingClientRect().top <= threshold;
-      setShowProgressPanel((prev) => (prev === nextVisible ? prev : nextVisible));
+      const nextVisible =
+        questionSection.getBoundingClientRect().top <= threshold;
+      setShowProgressPanel((prev) =>
+        prev === nextVisible ? prev : nextVisible,
+      );
     };
 
     const onScrollOrResize = () => {
@@ -255,7 +263,8 @@ export default function TestPage() {
   };
 
   const updateInfoField = (key: RespondentTextFieldKey, value: string) => {
-    const nextValue = key === "contact" ? value.replace(/\D/g, "").slice(0, 11) : value;
+    const nextValue =
+      key === "contact" ? value.replace(/\D/g, "").slice(0, 11) : value;
     setInfo((prev) => ({ ...prev, [key]: nextValue }));
     clearFieldError(key);
     setSubmitError("");
@@ -270,7 +279,9 @@ export default function TestPage() {
     privacyConsent: info.privacyConsent || DEFAULT_DEBUG_INFO.privacyConsent,
   });
 
-  const fillDebugForm = (nextStep: Exclude<FormStep, "intro" | "question"> = "info") => {
+  const fillDebugForm = (
+    nextStep: Exclude<FormStep, "intro" | "question"> = "info",
+  ) => {
     const nextAnswers = answers.map((score, index) =>
       score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index],
     );
@@ -339,7 +350,8 @@ export default function TestPage() {
     if (!info.contact.trim()) {
       nextFieldErrors.contact = "연락처를 입력해주세요.";
     } else if (!PHONE_PATTERN.test(info.contact.trim())) {
-      nextFieldErrors.contact = "010으로 시작하는 10~11자리 숫자를 입력해주세요.";
+      nextFieldErrors.contact =
+        "010으로 시작하는 10~11자리 숫자를 입력해주세요.";
     }
 
     if (!info.residence) {
@@ -381,9 +393,9 @@ export default function TestPage() {
         }),
       });
 
-      const responseBody = (await response.json().catch(() => null)) as
-        | { message?: string }
-        | null;
+      const responseBody = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
 
       if (!response.ok) {
         setSubmitError(
@@ -396,7 +408,9 @@ export default function TestPage() {
       setTotalScore(score);
       setFormStep("result");
     } catch {
-      setSubmitError("응답 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      setSubmitError(
+        "응답 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -417,16 +431,18 @@ export default function TestPage() {
             자동 채우기
           </button>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            {(["intro", "question", "info", "result"] as FormStep[]).map((step) => (
-              <button
-                key={step}
-                type="button"
-                onClick={() => moveToDebugStep(step)}
-                className="rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-3 py-2 text-xs font-semibold text-[var(--color-text-body)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
-              >
-                {step}
-              </button>
-            ))}
+            {(["intro", "question", "info", "result"] as FormStep[]).map(
+              (step) => (
+                <button
+                  key={step}
+                  type="button"
+                  onClick={() => moveToDebugStep(step)}
+                  className="rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-3 py-2 text-xs font-semibold text-[var(--color-text-body)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
+                >
+                  {step}
+                </button>
+              ),
+            )}
           </div>
         </div>
       ) : null}
@@ -435,7 +451,9 @@ export default function TestPage() {
         <div className="pointer-events-none fixed left-1/2 top-3 z-40 hidden w-[calc(100vw-4rem)] max-w-[60rem] -translate-x-1/2 md:block">
           <section className="pointer-events-auto w-full rounded-3xl border border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.94)] px-5 py-3 backdrop-blur-sm">
             <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold text-[var(--color-text-sub)]">문항 진행</p>
+              <p className="text-xs font-semibold text-[var(--color-text-sub)]">
+                문항 진행
+              </p>
               <p className="text-sm font-semibold text-[var(--color-text-body)]">
                 {questionProgressLabel}
               </p>
@@ -447,7 +465,9 @@ export default function TestPage() {
                   <span
                     key={question}
                     className={`h-1.5 rounded-full transition-colors ${
-                      done ? "bg-[var(--color-primary)]" : "bg-[var(--color-bg-gray)]"
+                      done
+                        ? "bg-[var(--color-primary)]"
+                        : "bg-[var(--color-bg-gray)]"
                     }`}
                   />
                 );
@@ -496,16 +516,22 @@ export default function TestPage() {
           }`}
         >
           {formStep === "question" ? (
-            <section ref={questionSectionRef} className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14">
+            <section
+              ref={questionSectionRef}
+              className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14"
+            >
               <div className="mb-12">
                 <div className="mb-3 flex items-center justify-center gap-3">
-                  <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">문항응답</h2>
+                  <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">
+                    문항응답
+                  </h2>
                   <span className="text-sm font-medium text-[var(--color-text-sub)] md:text-base">
                     / 총 9문항
                   </span>
                 </div>
                 <p className="text-[15px] leading-7 text-[var(--color-text-sub)] md:text-[17px] md:leading-8">
-                  지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
+                  지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을
+                  겪으셨습니까?
                 </p>
               </div>
 
@@ -550,7 +576,9 @@ export default function TestPage() {
                               }
                               className="sr-only"
                             />
-                            <span className="font-semibold tracking-[-0.01em]">{option.label}</span>
+                            <span className="font-semibold tracking-[-0.01em]">
+                              {option.label}
+                            </span>
                             <span
                               className={`inline-flex min-w-10 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                                 selected
@@ -571,10 +599,13 @@ export default function TestPage() {
           ) : (
             <section className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14">
               <div className="mb-8">
-                <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">응답자 정보</h2>
+                <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">
+                  응답자 정보
+                </h2>
               </div>
               <p className="mb-12 text-[15px] leading-7 text-[var(--color-text-sub)] md:text-[17px] md:leading-8">
-                대상자분에게 상담 예약을 위해 담당자가 직접 연락 드릴 예정입니다.
+                대상자분에게 상담 예약을 위해 담당자가 직접 연락 드릴
+                예정입니다.
               </p>
               <div className="space-y-9">
                 {INFO_FIELDS.map((field) => {
@@ -584,7 +615,10 @@ export default function TestPage() {
                     : "border-transparent bg-[var(--color-bg-gray)]";
 
                   return (
-                    <div key={field.key} className="mx-auto max-w-[36rem] space-y-3.5 text-left">
+                    <div
+                      key={field.key}
+                      className="mx-auto max-w-[36rem] space-y-3.5 text-left"
+                    >
                       <label
                         htmlFor={`info-${field.key}`}
                         className="block text-[15px] font-semibold text-[var(--color-text-body)] md:text-[17px]"
@@ -599,8 +633,12 @@ export default function TestPage() {
                             name={field.key}
                             value={info[field.key]}
                             aria-invalid={fieldError ? "true" : "false"}
-                            aria-describedby={fieldError ? `info-${field.key}-error` : undefined}
-                            onChange={(event) => updateInfoField(field.key, event.target.value)}
+                            aria-describedby={
+                              fieldError ? `info-${field.key}-error` : undefined
+                            }
+                            onChange={(event) =>
+                              updateInfoField(field.key, event.target.value)
+                            }
                             className={`h-14 w-full appearance-none rounded-[18px] border px-5 pr-12 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${inputClassName}`}
                           >
                             <option value="">거주지를 선택해주세요</option>
@@ -626,8 +664,12 @@ export default function TestPage() {
                           maxLength={field.maxLength}
                           pattern={field.pattern}
                           aria-invalid={fieldError ? "true" : "false"}
-                          aria-describedby={fieldError ? `info-${field.key}-error` : undefined}
-                          onChange={(event) => updateInfoField(field.key, event.target.value)}
+                          aria-describedby={
+                            fieldError ? `info-${field.key}-error` : undefined
+                          }
+                          onChange={(event) =>
+                            updateInfoField(field.key, event.target.value)
+                          }
                           className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${inputClassName}`}
                         />
                       )}
@@ -652,7 +694,9 @@ export default function TestPage() {
                     <p className="font-semibold text-[var(--color-text-body)]">
                       개인정보 수집 및 이용 동의서
                     </p>
-                    <p className="mt-2">1. 개인정보의 수집•이용 목적: 상담 안내 연락 및 혜택 제공</p>
+                    <p className="mt-2">
+                      1. 개인정보의 수집•이용 목적: 상담 안내 연락 및 혜택 제공
+                    </p>
                     <p>2. 수집하는 개인정보의 항목: 닉네임, 휴대폰 번호</p>
                     <p>
                       3. 개인정보의 이용 기간: 프로젝트 운영 기간
@@ -662,11 +706,11 @@ export default function TestPage() {
                     <p className="mt-3 font-semibold text-[var(--color-text-body)]">
                       개인정보 제3자 제공 동의
                     </p>
-                    <p className="mt-2">1. 개인정보를 제공받는 자: 헤세드릿지</p>
+                    <p className="mt-2">
+                      1. 개인정보를 제공받는 자: 헤세드릿지
+                    </p>
                   </div>
-                  <label
-                    className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-[var(--color-bg-white)] px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]"
-                  >
+                  <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-[var(--color-bg-white)] px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]">
                     <input
                       type="checkbox"
                       name="privacyConsent"
@@ -722,12 +766,14 @@ export default function TestPage() {
                   ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-5 py-4 text-[var(--color-text-body)]"
                   : isSubmitting
                     ? "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white opacity-70"
-                  : "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
+                    : "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
               }
             >
               {showQuestionProgress ? (
                 <span className="flex w-full flex-col gap-2">
-                  <span className="text-sm font-semibold leading-none">{questionProgressLabel}</span>
+                  <span className="text-sm font-semibold leading-none">
+                    {questionProgressLabel}
+                  </span>
                   <span className="grid grid-cols-9 gap-1.5">
                     {QUESTIONS.map((question, index) => {
                       const done = answers[index] >= 0;
@@ -750,29 +796,29 @@ export default function TestPage() {
         {formStep === "result" && resultBand ? (
           <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:mt-16 md:p-14">
             <div className="mx-auto max-w-3xl text-center">
-                <p
-                  className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resultBadgeClass}`}
-                >
-                  판정 결과
-                </p>
-                <h2 className="mb-4 text-[28px] font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[38px]">
-                  {resultBand.title}
-                </h2>
-                <p className="text-[15px] leading-7 text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-                  {resultBand.description}
-                </p>
-                <p className="mt-5 text-xs text-[var(--color-text-sub)] md:text-sm">
-                  출처: 박승진 외(2010), 한글판 우울증선별도구(Patient Health
-                  Questionnaire-9, PHQ-9)의 신뢰도와 타당도.
-                </p>
+              <p
+                className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resultBadgeClass}`}
+              >
+                판정 결과
+              </p>
+              <h2 className="mb-4 text-[28px] font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[38px]">
+                {resultBand.title}
+              </h2>
+              <p className="text-[15px] leading-7 text-[var(--color-text-body)] md:text-[18px] md:leading-8">
+                {resultBand.description}
+              </p>
+              <p className="mt-5 text-xs text-[var(--color-text-sub)] md:text-sm">
+                출처: 박승진 외(2010), 한글판 우울증선별도구(Patient Health
+                Questionnaire-9, PHQ-9)의 신뢰도와 타당도.
+              </p>
             </div>
             <div className="mx-auto mt-8 max-w-3xl rounded-[28px] bg-[var(--color-bg-warm-light)] px-6 py-7 text-left">
               <p className="text-[15px] font-semibold leading-7 text-[var(--color-text-dark)] md:text-[17px] md:leading-8">
                 아쉽지만 다행스럽게(?)도 이번 프로젝트의 대상자는 아닙니다.
               </p>
               <p className="mt-4 text-sm leading-6 text-[var(--color-text-body)] md:text-[15px] md:leading-7">
-                현재의 멘탈이 양호한 상태이니 앞으로도 꾸준한 관리를 통해 지금과 같은
-                멘탈 건강을 계속 유지해 나가시면 좋겠습니다.
+                현재의 멘탈이 양호한 상태이니 앞으로도 꾸준한 관리를 통해 지금과
+                같은 멘탈 건강을 계속 유지해 나가시면 좋겠습니다.
               </p>
             </div>
           </section>
@@ -781,38 +827,40 @@ export default function TestPage() {
 
       {formStep !== "intro" && formStep !== "result" ? (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
-            <button
-              type="submit"
-              form="phq-test-form"
-              disabled={isPrimaryButtonDisabled}
-              className={
-            showQuestionProgress
-              ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-4 py-4 text-[var(--color-text-body)]"
-              : isSubmitting
-                ? "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white opacity-70"
-              : "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white"
-          }
-        >
-          {showQuestionProgress ? (
-            <span className="flex w-full flex-col gap-2">
-              <span className="text-sm font-semibold leading-none">{questionProgressLabel}</span>
-              <span className="grid grid-cols-9 gap-1.5">
-                {QUESTIONS.map((question, index) => {
-                  const done = answers[index] >= 0;
-                  return (
-                    <span
-                      key={`mobile-${question}`}
-                      className={`h-1.5 rounded-full ${done ? "bg-[var(--color-primary)]" : "bg-[var(--color-primary-soft)]"}`}
-                    />
-                  );
-                })}
+          <button
+            type="submit"
+            form="phq-test-form"
+            disabled={isPrimaryButtonDisabled}
+            className={
+              showQuestionProgress
+                ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-4 py-4 text-[var(--color-text-body)]"
+                : isSubmitting
+                  ? "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white opacity-70"
+                  : "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white"
+            }
+          >
+            {showQuestionProgress ? (
+              <span className="flex w-full flex-col gap-2">
+                <span className="text-sm font-semibold leading-none">
+                  {questionProgressLabel}
+                </span>
+                <span className="grid grid-cols-9 gap-1.5">
+                  {QUESTIONS.map((question, index) => {
+                    const done = answers[index] >= 0;
+                    return (
+                      <span
+                        key={`mobile-${question}`}
+                        className={`h-1.5 rounded-full ${done ? "bg-[var(--color-primary)]" : "bg-[var(--color-primary-soft)]"}`}
+                      />
+                    );
+                  })}
+                </span>
               </span>
-            </span>
-          ) : (
-            primaryButtonLabel
-          )}
-        </button>
-      </div>
+            ) : (
+              primaryButtonLabel
+            )}
+          </button>
+        </div>
       ) : null}
     </div>
   );

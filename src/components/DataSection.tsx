@@ -1,11 +1,10 @@
 import CtaButton from "@/components/CtaButton";
 import { CheckCircleIcon, MetricChart } from "@/components/VectorArtwork";
 
-
 const RESULT_ITEMS = [
-  "4회기 심리상담 진행 후, 주요 지표들에서 유의미한 변화가 나타남",
-  "우울, 불안, 스트레스, 외로움 등 부정 정서가 유의하게 감소함",
-  "자아존중감, 회복탄력성, 삶의 만족도는 유의하게 상승함",
+  "4회 상담 후 주요 심리 지표에서 긍정적 변화가 확인되었습니다",
+  "우울, 불안, 스트레스, 외로움 등 부정 정서는 감소했습니다",
+  "자아존중감, 회복탄력성, 삶의 만족도는 향상되었습니다",
 ];
 
 export default function DataSection() {
@@ -47,7 +46,9 @@ export default function DataSection() {
                 className="flex items-center gap-3 py-3 md:gap-4 md:py-4"
               >
                 <CheckCircleIcon className="h-6 w-6 shrink-0 md:h-7 md:w-7" />
-                <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">{text}</span>
+                <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">
+                  {text}
+                </span>
               </div>
             ))}
           </div>
@@ -55,12 +56,12 @@ export default function DataSection() {
 
         <div className="mt-12 text-center md:mt-20">
           <p className="text-[18px] font-extrabold leading-[1.35] tracking-[-0.03em] text-primary-strong md:text-[30px]">
-            이 모든변화는 당신도 경험할 수 있습니다.
+            부담 없이 지금, 첫 상담을 시작해보세요.
           </p>
         </div>
 
         <div className="section-cta">
-          <CtaButton>지금 무료로 시작해보세요</CtaButton>
+          <CtaButton>무료 상담 신청하기</CtaButton>
         </div>
       </div>
     </section>
