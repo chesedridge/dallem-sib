@@ -14,13 +14,19 @@ export type RespondentInfo = {
   nickname: string;
   contact: string;
   residence: string;
+  consultationMethod: string;
+  consultationTopic: string;
+  consultationTopicDetail: string;
+  supportTopics: string[];
+  supportTopicsDetail: string;
+  hardshipLevel: string;
+  expectedSupport: string[];
   privacyConsent: boolean;
 };
 
-export type RespondentTextFieldKey = Exclude<
-  keyof RespondentInfo,
-  "privacyConsent"
->;
+export type RespondentTextFieldKey = {
+  [Key in keyof RespondentInfo]: RespondentInfo[Key] extends string ? Key : never;
+}[keyof RespondentInfo];
 export type RespondentInfoFieldKey = keyof RespondentInfo;
 export type RespondentInfoErrors = Partial<
   Record<RespondentInfoFieldKey, string>

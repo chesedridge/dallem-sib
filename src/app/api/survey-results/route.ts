@@ -13,6 +13,13 @@ const SHEET_HEADERS = [
   "닉네임",
   "연락처",
   "지역",
+  "상담방법",
+  "상담주제",
+  "상담주제기타",
+  "추가상담주제",
+  "추가상담주제기타",
+  "힘든정도",
+  "기대하는도움",
   "문항1",
   "문항2",
   "문항3",
@@ -30,6 +37,13 @@ type SurveySubmission = {
   nickname: string;
   contact: string;
   residence: string;
+  consultationMethod: string;
+  consultationTopic: string;
+  consultationTopicDetail: string;
+  supportTopics: string[];
+  supportTopicsDetail: string;
+  hardshipLevel: string;
+  expectedSupport: string[];
   privacyConsent: boolean;
   answers: number[];
   totalScore: number;
@@ -160,6 +174,13 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   const nickname = submission.nickname?.trim();
   const contact = submission.contact?.trim();
   const residence = submission.residence?.trim();
+  const consultationMethod = submission.consultationMethod?.trim();
+  const consultationTopic = submission.consultationTopic?.trim();
+  const consultationTopicDetail = submission.consultationTopicDetail?.trim() ?? "";
+  const supportTopics = submission.supportTopics;
+  const supportTopicsDetail = submission.supportTopicsDetail?.trim() ?? "";
+  const hardshipLevel = submission.hardshipLevel?.trim();
+  const expectedSupport = submission.expectedSupport;
   const answers = submission.answers;
   const totalScore = submission.totalScore;
   const resultTitle = submission.resultTitle?.trim();
@@ -169,8 +190,54 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     !nickname ||
     !contact ||
     !residence ||
+    !consultationMethod ||
+    !consultationTopic ||
+    !hardshipLevel ||
     !resultTitle ||
     !resultDescription
+  ) {
+    return null;
+  }
+
+  if (consultationTopic === "기타" && !consultationTopicDetail) {
+    return null;
+  }
+
+  if (!Array.isArray(supportTopics) || supportTopics.length > 2) {
+    return null;
+  }
+
+  const normalizedSupportTopics = supportTopics
+    .filter((topic): topic is string => typeof topic === "string")
+    .map((topic) => topic.trim())
+    .filter(Boolean);
+
+  if (
+    normalizedSupportTopics.length !== supportTopics.length ||
+    new Set(normalizedSupportTopics).size !== normalizedSupportTopics.length
+  ) {
+    return null;
+  }
+
+  if (
+    normalizedSupportTopics.includes("기타") &&
+    !supportTopicsDetail
+  ) {
+    return null;
+  }
+
+  if (!Array.isArray(expectedSupport) || expectedSupport.length > 2) {
+    return null;
+  }
+
+  const normalizedExpectedSupport = expectedSupport
+    .filter((option): option is string => typeof option === "string")
+    .map((option) => option.trim())
+    .filter(Boolean);
+
+  if (
+    normalizedExpectedSupport.length !== expectedSupport.length ||
+    new Set(normalizedExpectedSupport).size !== normalizedExpectedSupport.length
   ) {
     return null;
   }
@@ -201,6 +268,13 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     nickname,
     contact,
     residence,
+    consultationMethod,
+    consultationTopic,
+    consultationTopicDetail,
+    supportTopics: normalizedSupportTopics,
+    supportTopicsDetail,
+    hardshipLevel,
+    expectedSupport: normalizedExpectedSupport,
     privacyConsent: Boolean(submission.privacyConsent),
     answers,
     totalScore,
@@ -214,13 +288,18 @@ async function ensureHeaderRow(
   spreadsheetId: string,
   sheetName: string,
 ) {
-  const headerRange = sheetRange(sheetName, `A${HEADER_ROW}:P${HEADER_ROW}`);
+  const headerRange = sheetRange(sheetName, `A${HEADER_ROW}:W${HEADER_ROW}`);
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange,
   });
 
-  if ((data.values?.[0] ?? []).length > 0) {
+  const existingHeaders = data.values?.[0] ?? [];
+
+  if (
+    existingHeaders.length === SHEET_HEADERS.length &&
+    existingHeaders.every((header, index) => header === SHEET_HEADERS[index])
+  ) {
     return;
   }
 
@@ -310,7 +389,7 @@ export async function POST(request: Request) {
     await ensureHeaderRow(sheets, config.spreadsheetId, config.sheetName);
     await sheets.spreadsheets.values.append({
       spreadsheetId: config.spreadsheetId,
-      range: sheetRange(config.sheetName, `A${FIRST_DATA_ROW}:P`),
+      range: sheetRange(config.sheetName, `A${FIRST_DATA_ROW}:W`),
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
@@ -321,6 +400,13 @@ export async function POST(request: Request) {
             payload.nickname,
             payload.contact,
             payload.residence,
+            payload.consultationMethod,
+            payload.consultationTopic,
+            payload.consultationTopicDetail,
+            payload.supportTopics.join(", "),
+            payload.supportTopicsDetail,
+            payload.hardshipLevel,
+            payload.expectedSupport.join(", "),
             ...payload.answers,
             payload.totalScore,
             payload.resultTitle,

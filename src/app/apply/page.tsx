@@ -35,10 +35,18 @@ const DEBUG_STEPS: FormStep[] = [
 export default function TestPage() {
   const isDebugMode = process.env.NODE_ENV !== "production";
   const [formStep, setFormStep] = useState<FormStep>("intro");
+  const [applicationSubmitted, setApplicationSubmitted] = useState(false);
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
     contact: "",
     residence: "",
+    consultationMethod: "",
+    consultationTopic: "",
+    consultationTopicDetail: "",
+    supportTopics: [],
+    supportTopicsDetail: "",
+    hardshipLevel: "",
+    expectedSupport: [],
     privacyConsent: false,
   });
   const [answers, setAnswers] = useState<number[]>(
@@ -66,10 +74,10 @@ export default function TestPage() {
   const questionProgressLabel = `${QUESTIONS.length}개중 ${answeredCount}개 완료`;
   const primaryButtonLabel =
     formStep === "question"
-      ? "다음으로"
+      ? "결과보기"
       : isSubmitting
         ? "저장 중..."
-        : "결과보기";
+        : "상담 신청 완료";
   const isPrimaryButtonDisabled = isSubmitting || showQuestionProgress;
   const resultBadgeClass =
     totalScore !== null && totalScore >= 20
@@ -131,8 +139,21 @@ export default function TestPage() {
   const updateInfoField = (key: RespondentTextFieldKey, value: string) => {
     const nextValue =
       key === "contact" ? value.replace(/\D/g, "").slice(0, 11) : value;
-    setInfo((prev) => ({ ...prev, [key]: nextValue }));
+    setInfo((prev) => {
+      if (key === "consultationTopic" && nextValue !== "기타") {
+        return {
+          ...prev,
+          consultationTopic: nextValue,
+          consultationTopicDetail: "",
+        };
+      }
+
+      return { ...prev, [key]: nextValue };
+    });
     clearFieldError(key);
+    if (key === "consultationTopic" && nextValue !== "기타") {
+      clearFieldError("consultationTopicDetail");
+    }
     setSubmitError("");
   };
 
@@ -142,6 +163,65 @@ export default function TestPage() {
       privacyConsent: checked,
     }));
     clearFieldError("privacyConsent");
+    setSubmitError("");
+  };
+
+  const toggleSupportTopic = (topic: string) => {
+    setInfo((prev) => {
+      const alreadySelected = prev.supportTopics.includes(topic);
+
+      if (alreadySelected) {
+        const nextSupportTopics = prev.supportTopics.filter(
+          (selectedTopic) => selectedTopic !== topic,
+        );
+
+        return {
+          ...prev,
+          supportTopics: nextSupportTopics,
+          supportTopicsDetail:
+            topic === "기타" ? "" : prev.supportTopicsDetail,
+        };
+      }
+
+      if (prev.supportTopics.length >= 2) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        supportTopics: [...prev.supportTopics, topic],
+      };
+    });
+    clearFieldError("supportTopics");
+    if (topic === "기타") {
+      clearFieldError("supportTopicsDetail");
+    }
+    setSubmitError("");
+  };
+
+  const toggleExpectedSupport = (option: string) => {
+    setInfo((prev) => {
+      const alreadySelected = prev.expectedSupport.includes(option);
+
+      if (alreadySelected) {
+        return {
+          ...prev,
+          expectedSupport: prev.expectedSupport.filter(
+            (selectedOption) => selectedOption !== option,
+          ),
+        };
+      }
+
+      if (prev.expectedSupport.length >= 2) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        expectedSupport: [...prev.expectedSupport, option],
+      };
+    });
+    clearFieldError("expectedSupport");
     setSubmitError("");
   };
 
@@ -159,6 +239,21 @@ export default function TestPage() {
       ? info.contact.trim()
       : DEFAULT_DEBUG_INFO.contact,
     residence: info.residence || DEFAULT_DEBUG_INFO.residence,
+    consultationMethod:
+      info.consultationMethod || DEFAULT_DEBUG_INFO.consultationMethod,
+    consultationTopic:
+      info.consultationTopic || DEFAULT_DEBUG_INFO.consultationTopic,
+    consultationTopicDetail:
+      info.consultationTopic === "기타"
+        ? info.consultationTopicDetail.trim() ||
+          DEFAULT_DEBUG_INFO.consultationTopicDetail
+        : "",
+    supportTopics: info.supportTopics,
+    supportTopicsDetail: info.supportTopics.includes("기타")
+      ? info.supportTopicsDetail.trim() || DEFAULT_DEBUG_INFO.supportTopicsDetail
+      : "",
+    hardshipLevel: info.hardshipLevel || DEFAULT_DEBUG_INFO.hardshipLevel,
+    expectedSupport: info.expectedSupport,
     privacyConsent: info.privacyConsent || DEFAULT_DEBUG_INFO.privacyConsent,
   });
 
@@ -171,6 +266,7 @@ export default function TestPage() {
     setFieldErrors({});
     setSubmitError("");
     setIsSubmitting(false);
+    setApplicationSubmitted(false);
     setAnswers(nextAnswers);
     setInfo(nextInfo);
 
@@ -188,6 +284,7 @@ export default function TestPage() {
     setFieldErrors({});
     setSubmitError("");
     setIsSubmitting(false);
+    setApplicationSubmitted(false);
 
     if (nextStep === "intro") {
       setTotalScore(null);
@@ -230,7 +327,10 @@ export default function TestPage() {
       }
 
       setFieldErrors({});
-      setFormStep("info");
+      setSubmitError("");
+      setApplicationSubmitted(false);
+      setTotalScore(answers.reduce((acc, current) => acc + current, 0));
+      setFormStep("result");
       return;
     }
 
@@ -249,6 +349,42 @@ export default function TestPage() {
 
     if (!info.residence) {
       nextFieldErrors.residence = "거주지를 선택해주세요.";
+    }
+
+    if (!info.consultationMethod) {
+      nextFieldErrors.consultationMethod = "상담방법을 선택해주세요.";
+    }
+
+    if (!info.consultationTopic) {
+      nextFieldErrors.consultationTopic = "상담주제를 선택해주세요.";
+    } else if (
+      info.consultationTopic === "기타" &&
+      !info.consultationTopicDetail.trim()
+    ) {
+      nextFieldErrors.consultationTopicDetail =
+        "기타 상담주제를 입력해주세요.";
+    }
+
+    if (info.supportTopics.length > 2) {
+      nextFieldErrors.supportTopics = "추가 상담주제는 최대 2개까지 선택할 수 있습니다.";
+    } else if (
+      info.supportTopics.includes("기타") &&
+      !info.supportTopicsDetail.trim()
+    ) {
+      nextFieldErrors.supportTopicsDetail =
+        "추가 상담주제의 기타 내용을 입력해주세요.";
+    }
+
+    if (!info.hardshipLevel) {
+      nextFieldErrors.hardshipLevel = "현재 가장 힘든 정도를 선택해주세요.";
+    }
+
+    if (info.expectedSupport.length === 0) {
+      nextFieldErrors.expectedSupport =
+        "상담에서 기대하는 도움을 1개 이상 선택해주세요.";
+    } else if (info.expectedSupport.length > 2) {
+      nextFieldErrors.expectedSupport =
+        "상담에서 기대하는 도움은 최대 2개까지 선택할 수 있습니다.";
     }
 
     if (Object.keys(nextFieldErrors).length > 0) {
@@ -278,6 +414,18 @@ export default function TestPage() {
           nickname: info.nickname.trim(),
           contact: info.contact.trim(),
           residence: info.residence,
+          consultationMethod: info.consultationMethod,
+          consultationTopic: info.consultationTopic,
+          consultationTopicDetail:
+            info.consultationTopic === "기타"
+              ? info.consultationTopicDetail.trim()
+              : "",
+          supportTopics: info.supportTopics,
+          supportTopicsDetail: info.supportTopics.includes("기타")
+            ? info.supportTopicsDetail.trim()
+            : "",
+          hardshipLevel: info.hardshipLevel,
+          expectedSupport: info.expectedSupport,
           privacyConsent: info.privacyConsent,
           answers,
           totalScore: score,
@@ -298,6 +446,7 @@ export default function TestPage() {
         return;
       }
 
+      setApplicationSubmitted(true);
       setTotalScore(score);
       setFormStep("result");
     } catch {
@@ -371,10 +520,10 @@ export default function TestPage() {
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
           <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            경기도 거주자, 직장인을 위한
+            경기도민 또는 경기도 직장인을 위한
           </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
-            우울증 개선 및 자살예방 SIB사업
+            멘탈케어 프로젝트
           </h1>
           <p className="mx-auto max-w-[42rem] text-[15px] leading-7 text-[var(--color-text-body)] md:text-[17px] md:leading-8">
             본 프로그램은 익명으로 참여하실 수 있으며, 전회차 무료로 진행됩니다.
@@ -409,20 +558,22 @@ export default function TestPage() {
             <ApplyInfoStep
               fieldErrors={fieldErrors}
               info={info}
+              onToggleExpectedSupport={toggleExpectedSupport}
               onPrivacyConsentChange={updatePrivacyConsent}
+              onToggleSupportTopic={toggleSupportTopic}
               onUpdateField={updateInfoField}
               submitError={submitError}
             />
           ) : null}
 
           <div className="hidden w-full justify-center pt-2 md:flex md:pt-4">
-            {isPrimaryButtonDisabled && formStep === "question" && (
+          {isPrimaryButtonDisabled && formStep === "question" && (
               <button
                 type="button"
                 disabled={isPrimaryButtonDisabled}
                 className="hidden md:block rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white opacity-70"
               >
-                다음으로
+                결과보기
               </button>
             )}
             <button
@@ -466,6 +617,8 @@ export default function TestPage() {
 
         {formStep === "result" && resultBand ? (
           <ApplyResultStep
+            applicationSubmitted={applicationSubmitted}
+            onProceedToApply={() => setFormStep("info")}
             resultBadgeClass={resultBadgeClass}
             resultBand={resultBand}
           />
