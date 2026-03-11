@@ -48,6 +48,8 @@ function getGoogleSheetsConfig() {
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
   const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME ?? "Sheet1";
 
+  console.log({ serviceAccountEmail, privateKey, spreadsheetId, sheetName });
+
   if (!serviceAccountEmail || !privateKey || !spreadsheetId) {
     return null;
   }
@@ -74,7 +76,13 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   const resultTitle = submission.resultTitle?.trim();
   const resultDescription = submission.resultDescription?.trim();
 
-  if (!nickname || !contact || !residence || !resultTitle || !resultDescription) {
+  if (
+    !nickname ||
+    !contact ||
+    !residence ||
+    !resultTitle ||
+    !resultDescription
+  ) {
     return null;
   }
 
