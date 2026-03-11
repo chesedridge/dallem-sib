@@ -42,6 +42,26 @@ type GoogleServiceAccountJson = {
   private_key?: string;
 };
 
+type GoogleApiError = {
+  code?: number | string;
+  status?: number;
+  message?: string;
+  response?: {
+    status?: number;
+    data?: {
+      error?: {
+        code?: number;
+        message?: string;
+        status?: string;
+      };
+    };
+  };
+  errors?: Array<{
+    message?: string;
+    reason?: string;
+  }>;
+};
+
 function sheetRange(sheetName: string, range: string) {
   const escapedSheetName = sheetName.replace(/'/g, "''");
   return `'${escapedSheetName}'!${range}`;
@@ -72,6 +92,35 @@ function parseServiceAccountJson(rawValue?: string): GoogleServiceAccountJson | 
   } catch {
     return null;
   }
+}
+
+function getGoogleApiErrorDetails(error: unknown) {
+  const googleApiError = error as GoogleApiError;
+  const status =
+    googleApiError.response?.status ??
+    googleApiError.status ??
+    (typeof googleApiError.code === "number" ? googleApiError.code : undefined);
+  const message =
+    googleApiError.response?.data?.error?.message ??
+    googleApiError.errors?.[0]?.message ??
+    googleApiError.message ??
+    "Unknown error";
+
+  return { status, message };
+}
+
+async function getSpreadsheetSheetTitles(
+  sheets: ReturnType<typeof google.sheets>,
+  spreadsheetId: string,
+) {
+  const { data } = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets.properties.title",
+  });
+
+  return data.sheets
+    ?.map((sheet) => sheet.properties?.title)
+    .filter((title): title is string => Boolean(title)) ?? [];
 }
 
 function getGoogleSheetsConfig() {
@@ -216,6 +265,47 @@ export async function POST(request: Request) {
       scopes: ["https://www.googleapis.com/auth/spreadsheets"],
     });
     const sheets = google.sheets({ version: "v4", auth });
+    let sheetTitles: string[];
+
+    try {
+      sheetTitles = await getSpreadsheetSheetTitles(sheets, config.spreadsheetId);
+    } catch (error) {
+      const { status, message } = getGoogleApiErrorDetails(error);
+
+      console.error("Failed to load Google Sheets metadata", {
+        status,
+        message,
+        spreadsheetId: config.spreadsheetId,
+        sheetName: config.sheetName,
+      });
+
+      return NextResponse.json(
+        {
+          message:
+            status === 404
+              ? "스프레드시트를 찾을 수 없습니다. 스프레드시트 ID와 서비스 계정 공유 상태를 확인해주세요."
+              : status === 403
+                ? "스프레드시트 접근 권한이 없습니다. 서비스 계정을 편집자로 공유했는지 확인해주세요."
+                : "Google Sheets 메타데이터 조회에 실패했습니다. 환경변수와 권한을 확인해주세요.",
+        },
+        { status: 500 },
+      );
+    }
+
+    if (!sheetTitles.includes(config.sheetName)) {
+      console.error("Google Sheets tab was not found", {
+        spreadsheetId: config.spreadsheetId,
+        requestedSheetName: config.sheetName,
+        availableSheetNames: sheetTitles,
+      });
+
+      return NextResponse.json(
+        {
+          message: `시트 탭 '${config.sheetName}'을 찾을 수 없습니다. 실제 탭 이름을 GOOGLE_SHEETS_SHEET_NAME에 정확히 입력해주세요.`,
+        },
+        { status: 500 },
+      );
+    }
 
     await ensureHeaderRow(sheets, config.spreadsheetId, config.sheetName);
     await sheets.spreadsheets.values.append({
@@ -241,12 +331,23 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-    console.error("Failed to append survey result to Google Sheets", error);
+    const { status, message } = getGoogleApiErrorDetails(error);
+
+    console.error("Failed to append survey result to Google Sheets", {
+      status,
+      message,
+      spreadsheetId: config.spreadsheetId,
+      sheetName: config.sheetName,
+    });
 
     return NextResponse.json(
       {
         message:
-          "Google Sheets 저장 중 오류가 발생했습니다. 시트 공유와 환경변수를 확인해주세요.",
+          status === 404
+            ? "Google Sheets 저장 대상이 없습니다. 스프레드시트 ID와 시트 탭 이름을 다시 확인해주세요."
+            : status === 403
+              ? "Google Sheets 저장 권한이 없습니다. 서비스 계정을 시트 편집자로 공유했는지 확인해주세요."
+              : "Google Sheets 저장 중 오류가 발생했습니다. 시트 공유와 환경변수를 확인해주세요.",
       },
       { status: 500 },
     );
