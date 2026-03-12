@@ -589,6 +589,14 @@ export function MetricChart({ kind }: MetricChartProps) {
           <stop stopColor={CORAL_DEEP} />
           <stop offset="1" stopColor={CORAL_DEEP} stopOpacity="0.18" />
         </linearGradient>
+        <linearGradient id="arrowUp" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stopColor={CORAL_LIGHT} />
+          <stop offset="1" stopColor={CORAL} />
+        </linearGradient>
+        <linearGradient id="arrowDown" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor={CORAL_LIGHT} />
+          <stop offset="1" stopColor={CORAL_DEEP} />
+        </linearGradient>
       </defs>
       <rect x="1" y="1" width={width - 2} height={height - 2} rx="24" fill="#f7efed" />
       <Legend accent={accent} />
@@ -609,6 +617,19 @@ export function MetricChart({ kind }: MetricChartProps) {
           />
         );
       })}
+      {isPositive ? (
+        <path
+          d="M 90,305 Q 74,288 90,270 C 180,298 400,176 480,130 L 480,115 L 545,110 L 480,180 L 480,165 C 400,216 180,338 90,305 Z"
+          fill="url(#arrowUp)"
+          opacity="0.28"
+        />
+      ) : (
+        <path
+          d="M 90,148 Q 74,130 90,112 C 175,200 350,260 480,290 L 488,274 L 553,325 L 472,342 L 480,326 C 350,296 175,238 90,148 Z"
+          fill="url(#arrowDown)"
+          opacity="0.28"
+        />
+      )}
       <Callout cx={330} y={68} text={deltaText} color={isPositive ? CORAL_DEEP : CORAL_DEEP} />
       {!isPositive && (
         <text
