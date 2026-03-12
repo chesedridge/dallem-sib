@@ -9,7 +9,7 @@ import ProjectInfoList from "./ProjectInfoList";
 
 export default function HeroSection() {
   return (
-    <section className="relative flex min-h-screen w-full overflow-hidden bg-[var(--color-bg-warm)]">
+    <section className="relative flex min-h-screen w-full overflow-hidden bg-bg-warm">
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.62),_transparent_42%),radial-gradient(circle_at_18%_24%,_rgba(240,135,119,0.24),_transparent_28%),linear-gradient(180deg,_#fff6f4_0%,_#fbded8_44%,_#f4beb4_100%)]" />
         <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(rgba(215,101,84,0.14)_1px,transparent_1px)] [background-size:26px_26px]" />
@@ -38,7 +38,7 @@ export default function HeroSection() {
           </h1>
           <p className="mt-7 max-w-[800px] text-[15px] leading-[1.55] tracking-[-0.02em] text-primary-strong md:mt-10 md:text-[26px] md:leading-[1.4]">
             <strong className="font-bold">경기도민</strong> 또는{" "}
-            <strong className="font-bold">경기도 재직자</strong>라면,
+            <strong className="font-bold">경기도 소재 회사 재직중</strong>이라면,
             <br />1인당 4회{" "}
             <strong className="font-bold">무료 심리상담</strong>을 받을 수
             있습니다.

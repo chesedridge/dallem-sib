@@ -153,28 +153,6 @@ export function DownChevronIcon({ className }: IconProps) {
   );
 }
 
-function LockIcon({ className }: IconProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={iconClassName(className)}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="14" y="27" width="36" height="26" rx="5" fill={CORAL} />
-      <path
-        d="M22 27V20C22 14.5 26.5 10 32 10C37.5 10 42 14.5 42 20V27"
-        stroke={CORAL}
-        strokeWidth="6"
-        strokeLinecap="round"
-      />
-      <circle cx="32" cy="39" r="4" fill="white" />
-      <path d="M32 39V44" stroke="white" strokeWidth="4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function TagIcon({ className }: IconProps) {
   return (
     <svg
@@ -201,25 +179,6 @@ function TagIcon({ className }: IconProps) {
         strokeWidth="3.4"
         strokeLinecap="round"
       />
-    </svg>
-  );
-}
-
-function CertificateIcon({ className }: IconProps) {
-  return (
-    <svg
-      aria-hidden="true"
-      className={iconClassName(className)}
-      viewBox="0 0 64 64"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <rect x="11" y="12" width="42" height="31" rx="4" fill={CORAL} />
-      <path d="M22 22H42" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
-      <path d="M18 30H31" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
-      <circle cx="40" cy="37" r="8" fill="none" stroke="white" strokeWidth="3" />
-      <path d="M40 32.5L41.4 35.5L44.8 35.9L42.3 38.2L42.9 41.5L40 40L37.1 41.5L37.7 38.2L35.2 35.9L38.6 35.5L40 32.5Z" fill="white" />
-      <path d="M35 44V53L40 49.5L45 53V44" fill={CORAL} />
     </svg>
   );
 }
@@ -329,7 +288,7 @@ export function BenefitCard({
   return (
     <article
       className={[
-        "rounded-[24px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] text-center",
+        "rounded-[24px] border border-[var(--color-border-soft)] bg-bg-white text-center",
         compact ? "px-5 py-5 md:px-6 md:py-6" : "px-7 py-9 md:px-4 md:py-12",
       ]
         .filter(Boolean)
@@ -361,37 +320,6 @@ export function BenefitCard({
         </p>
       ) : null}
     </article>
-  );
-}
-
-export function HeroFeatureStrip() {
-  return (
-    <div className="grid grid-cols-3 gap-2.5 md:gap-5">
-      <div className="rounded-[18px] border border-white/60 bg-white/72 px-3 py-4 text-center backdrop-blur-sm md:rounded-[24px] md:px-7 md:py-6">
-        <LockIcon className="mx-auto mb-2 h-7 w-7 md:mb-3 md:h-10 md:w-10" />
-        <p className="text-[12px] font-bold leading-[1.35] tracking-[-0.02em] text-text-dark md:text-[18px]">
-          익명 상담
-          <br />
-          보장
-        </p>
-      </div>
-      <div className="rounded-[18px] border border-white/60 bg-white/72 px-3 py-4 text-center backdrop-blur-sm md:rounded-[24px] md:px-7 md:py-6">
-        <TagIcon className="mx-auto mb-2 h-7 w-7 md:mb-3 md:h-10 md:w-10" />
-        <p className="text-[12px] font-bold leading-[1.35] tracking-[-0.02em] text-text-dark md:text-[18px]">
-          모든 회사
-          <br />
-          무료 상담 제공
-        </p>
-      </div>
-      <div className="rounded-[18px] border border-white/60 bg-white/72 px-3 py-4 text-center backdrop-blur-sm md:rounded-[24px] md:px-7 md:py-6">
-        <CertificateIcon className="mx-auto mb-2 h-7 w-7 md:mb-3 md:h-10 md:w-10" />
-        <p className="text-[12px] font-bold leading-[1.35] tracking-[-0.02em] text-text-dark md:text-[18px]">
-          전문 심리 상담가
-          <br />
-          서비스 제공
-        </p>
-      </div>
-    </div>
   );
 }
 
@@ -724,7 +652,7 @@ const PROCEDURE_STEPS = [
 
 export function ProcedureTimeline({ compact = false }: ProcedureTimelineProps) {
   return (
-    <div className="mx-auto max-w-[600px] overflow-hidden rounded-[22px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-5 py-3 md:max-w-[840px] md:px-8 md:py-5">
+    <div className="mx-auto max-w-[600px] overflow-hidden rounded-[22px] border border-[var(--color-border-soft)] bg-bg-white px-5 py-3 md:max-w-[840px] md:px-8 md:py-5">
       {PROCEDURE_STEPS.map((step) => (
         <div
           key={step.title}

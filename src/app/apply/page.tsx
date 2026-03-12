@@ -82,10 +82,10 @@ export default function TestPage() {
   const isPrimaryButtonDisabled = isSubmitting || showQuestionProgress;
   const resultBadgeClass =
     totalScore !== null && totalScore >= 20
-      ? "bg-[var(--color-primary)] text-white"
+      ? "bg-primary text-white"
       : totalScore !== null && totalScore >= 10
-        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]"
-        : "bg-[var(--color-bg-gray)] text-[var(--color-text-body)]";
+        ? "bg-primary-soft text-[var(--color-primary-strong)]"
+        : "bg-bg-gray text-[var(--color-text-body)]";
 
   useEffect(() => {
     if (formStep !== "question") {
@@ -179,8 +179,7 @@ export default function TestPage() {
         return {
           ...prev,
           supportTopics: nextSupportTopics,
-          supportTopicsDetail:
-            topic === "기타" ? "" : prev.supportTopicsDetail,
+          supportTopicsDetail: topic === "기타" ? "" : prev.supportTopicsDetail,
         };
       }
 
@@ -251,7 +250,8 @@ export default function TestPage() {
         : "",
     supportTopics: info.supportTopics,
     supportTopicsDetail: info.supportTopics.includes("기타")
-      ? info.supportTopicsDetail.trim() || DEFAULT_DEBUG_INFO.supportTopicsDetail
+      ? info.supportTopicsDetail.trim() ||
+        DEFAULT_DEBUG_INFO.supportTopicsDetail
       : "",
     hardshipLevel: info.hardshipLevel || DEFAULT_DEBUG_INFO.hardshipLevel,
     expectedSupport: info.expectedSupport,
@@ -366,12 +366,12 @@ export default function TestPage() {
       info.consultationTopic === "기타" &&
       !info.consultationTopicDetail.trim()
     ) {
-      nextFieldErrors.consultationTopicDetail =
-        "기타 상담주제를 입력해주세요.";
+      nextFieldErrors.consultationTopicDetail = "기타 상담주제를 입력해주세요.";
     }
 
     if (info.supportTopics.length > 2) {
-      nextFieldErrors.supportTopics = "추가 상담주제는 최대 2개까지 선택할 수 있습니다.";
+      nextFieldErrors.supportTopics =
+        "추가 상담주제는 최대 2개까지 선택할 수 있습니다.";
     } else if (
       info.supportTopics.includes("기타") &&
       !info.supportTopicsDetail.trim()
@@ -463,7 +463,7 @@ export default function TestPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-warm-light)] py-14 pb-28 md:py-20 md:pb-20">
+    <div className="min-h-screen bg-bg-warm-light py-14 pb-28 md:py-20 md:pb-20">
       {isDebugMode ? (
         <div className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
@@ -472,7 +472,7 @@ export default function TestPage() {
           <button
             type="button"
             onClick={() => fillDebugForm("info")}
-            className="mt-3 w-full rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-primary-soft)] px-3 py-2 text-xs font-semibold text-[var(--color-primary-strong)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
+            className="mt-3 w-full rounded-xl border border-[var(--color-border-soft)] bg-primary-soft px-3 py-2 text-xs font-semibold text-[var(--color-primary-strong)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-bg-warm-light"
           >
             자동 채우기
           </button>
@@ -482,7 +482,7 @@ export default function TestPage() {
                 key={step}
                 type="button"
                 onClick={() => moveToDebugStep(step)}
-                className="rounded-xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-3 py-2 text-xs font-semibold text-[var(--color-text-body)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-[var(--color-bg-warm-light)]"
+                className="rounded-xl border border-[var(--color-border-soft)] bg-bg-white px-3 py-2 text-xs font-semibold text-[var(--color-text-body)] transition-colors hover:border-[var(--color-border-strong)] hover:bg-bg-warm-light"
               >
                 {step}
               </button>
@@ -510,8 +510,8 @@ export default function TestPage() {
                     key={question}
                     className={`h-1.5 rounded-full transition-colors ${
                       done
-                        ? "bg-[var(--color-primary)]"
-                        : "bg-[var(--color-bg-gray)]"
+                        ? "bg-primary"
+                        : "bg-bg-gray"
                     }`}
                   />
                 );
@@ -524,7 +524,7 @@ export default function TestPage() {
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
           <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            경기도민 또는 경기도 직장인을 위한
+            경기도민 또는 경기도 소재 회사에 재직중인 직장인을 위한
           </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
             멘탈케어 프로젝트
@@ -571,11 +571,11 @@ export default function TestPage() {
           ) : null}
 
           <div className="hidden w-full justify-center pt-2 md:flex md:pt-4">
-          {isPrimaryButtonDisabled && formStep === "question" && (
+            {isPrimaryButtonDisabled && formStep === "question" && (
               <button
                 type="button"
                 disabled={isPrimaryButtonDisabled}
-                className="hidden md:block rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white opacity-70"
+                className="hidden md:block rounded-full bg-primary px-12 py-4 text-[17px] font-semibold text-white opacity-70"
               >
                 결과보기
               </button>
@@ -585,10 +585,10 @@ export default function TestPage() {
               disabled={isPrimaryButtonDisabled}
               className={
                 showQuestionProgress
-                  ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-5 py-4 text-[var(--color-text-body)] md:hidden"
+                  ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-bg-white px-5 py-4 text-[var(--color-text-body)] md:hidden"
                   : isSubmitting
-                    ? "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white opacity-70"
-                    : "rounded-full bg-[var(--color-primary)] px-12 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
+                    ? "rounded-full bg-primary px-12 py-4 text-[17px] font-semibold text-white opacity-70"
+                    : "rounded-full bg-primary px-12 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-primary-light"
               }
             >
               {showQuestionProgress ? (
@@ -602,7 +602,7 @@ export default function TestPage() {
                       return (
                         <span
                           key={`desktop-${question}`}
-                          className={`h-1.5 rounded-full ${done ? "bg-[var(--color-primary)]" : "bg-[var(--color-primary-soft)]"}`}
+                          className={`h-1.5 rounded-full ${done ? "bg-primary" : "bg-primary-soft"}`}
                         />
                       );
                     })}
@@ -627,9 +627,7 @@ export default function TestPage() {
           />
         ) : null}
 
-        {formStep === "submitted" && resultBand ? (
-          <ApplySubmittedStep />
-        ) : null}
+        {formStep === "submitted" && resultBand ? <ApplySubmittedStep /> : null}
       </main>
 
       {shouldShowForm ? (
@@ -640,10 +638,10 @@ export default function TestPage() {
             disabled={isPrimaryButtonDisabled}
             className={
               showQuestionProgress
-                ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] px-4 py-4 text-[var(--color-text-body)]"
+                ? "w-full max-w-[60rem] cursor-not-allowed rounded-3xl border border-[var(--color-border-soft)] bg-bg-white px-4 py-4 text-[var(--color-text-body)]"
                 : isSubmitting
-                  ? "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white opacity-70"
-                  : "w-full rounded-full bg-[var(--color-primary)] px-6 py-4 text-[16px] font-semibold text-white"
+                  ? "w-full rounded-full bg-primary px-6 py-4 text-[16px] font-semibold text-white opacity-70"
+                  : "w-full rounded-full bg-primary px-6 py-4 text-[16px] font-semibold text-white"
             }
           >
             {showQuestionProgress ? (
@@ -657,7 +655,7 @@ export default function TestPage() {
                     return (
                       <span
                         key={`mobile-${question}`}
-                        className={`h-1.5 rounded-full ${done ? "bg-[var(--color-primary)]" : "bg-[var(--color-primary-soft)]"}`}
+                        className={`h-1.5 rounded-full ${done ? "bg-primary" : "bg-primary-soft"}`}
                       />
                     );
                   })}

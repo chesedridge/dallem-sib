@@ -6,7 +6,7 @@ type ApplyIntroStepProps = {
 
 export function ApplyIntroStep({ onStart }: ApplyIntroStepProps) {
   return (
-    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:mt-16 md:p-14">
+    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:mt-16 md:p-14">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           우울(PHQ-9) 자가검진
@@ -18,7 +18,7 @@ export function ApplyIntroStep({ onStart }: ApplyIntroStepProps) {
       <button
         type="button"
         onClick={onStart}
-        className="mt-8 rounded-full bg-[var(--color-primary)] px-14 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
+        className="mt-8 rounded-full bg-primary px-14 py-4 text-[17px] font-semibold text-white transition-colors hover:bg-primary-light"
       >
         시작하기
       </button>

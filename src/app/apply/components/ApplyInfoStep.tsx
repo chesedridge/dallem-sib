@@ -116,12 +116,12 @@ function SingleSelectDropdown({
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((prev) => !prev)}
-          className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-[18px] border px-5 py-4 text-left text-[15px] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${
+          className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-[18px] border px-5 py-4 text-left text-[15px] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-bg-white ${
             error
-              ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+              ? "border-[var(--color-primary)] bg-primary-soft"
               : open
-                ? "border-[var(--color-border-strong)] bg-[var(--color-bg-white)]"
-                : "border-transparent bg-[var(--color-bg-gray)]"
+                ? "border-[var(--color-border-strong)] bg-bg-white"
+                : "border-transparent bg-bg-gray"
           }`}
         >
           <span
@@ -145,7 +145,7 @@ function SingleSelectDropdown({
         {open ? (
           <div
             id={panelId}
-            className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[24px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] shadow-[0_18px_42px_rgba(15,23,42,0.12)]"
+            className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[24px] border border-[var(--color-border-soft)] bg-bg-white shadow-[0_18px_42px_rgba(15,23,42,0.12)]"
           >
             <div className="max-h-80 overflow-y-auto p-2">
               {options.map((option) => {
@@ -161,15 +161,15 @@ function SingleSelectDropdown({
                     }}
                     className={`flex w-full items-start gap-3 rounded-[18px] px-4 py-3 text-left transition-colors ${
                       selected
-                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]"
-                        : "text-[var(--color-text-body)] hover:bg-[var(--color-bg-gray)]"
+                        ? "bg-primary-soft text-[var(--color-primary-strong)]"
+                        : "text-[var(--color-text-body)] hover:bg-bg-gray"
                     }`}
                   >
                     <span
                       className={`mt-0.5 flex size-5 shrink-0 rounded-full border ${
                         selected
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary)] shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
-                          : "border-[var(--color-border-strong)] bg-[var(--color-bg-white)]"
+                          ? "border-[var(--color-primary)] bg-primary shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
+                          : "border-[var(--color-border-strong)] bg-bg-white"
                       }`}
                     />
                     <span className="leading-6">{formatOptionLabel(option)}</span>
@@ -221,12 +221,12 @@ function MultiSelectDropdown({
           aria-expanded={open}
           aria-controls={panelId}
           onClick={() => setOpen((prev) => !prev)}
-          className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-[18px] border px-5 py-4 text-left outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${
+          className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-[18px] border px-5 py-4 text-left outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-bg-white ${
             error
-              ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+              ? "border-[var(--color-primary)] bg-primary-soft"
               : open
-                ? "border-[var(--color-border-strong)] bg-[var(--color-bg-white)]"
-                : "border-transparent bg-[var(--color-bg-gray)]"
+                ? "border-[var(--color-border-strong)] bg-bg-white"
+                : "border-transparent bg-bg-gray"
           }`}
         >
           {selectedValues.length > 0 ? (
@@ -234,7 +234,7 @@ function MultiSelectDropdown({
               {selectedValues.map((value) => (
                 <span
                   key={value}
-                  className="rounded-full bg-[var(--color-primary-soft)] px-3 py-1 text-[13px] font-medium text-[var(--color-primary-strong)]"
+                  className="rounded-full bg-primary-soft px-3 py-1 text-[13px] font-medium text-[var(--color-primary-strong)]"
                 >
                   {formatOptionLabel(value)}
                 </span>
@@ -262,7 +262,7 @@ function MultiSelectDropdown({
         {open ? (
           <div
             id={panelId}
-            className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[24px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] shadow-[0_18px_42px_rgba(15,23,42,0.12)]"
+            className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-[24px] border border-[var(--color-border-soft)] bg-bg-white shadow-[0_18px_42px_rgba(15,23,42,0.12)]"
           >
             <div className="border-b border-[var(--color-border-soft)] px-4 py-3 text-xs font-semibold text-[var(--color-text-sub)]">
               최대 {maxSelections}개까지 선택할 수 있습니다.
@@ -280,17 +280,17 @@ function MultiSelectDropdown({
                     onClick={() => onToggle(option)}
                     className={`flex w-full items-start gap-3 rounded-[18px] px-4 py-3 text-left transition-colors ${
                       selected
-                        ? "bg-[var(--color-primary-soft)] text-[var(--color-primary-strong)]"
+                        ? "bg-primary-soft text-[var(--color-primary-strong)]"
                         : disabled
                           ? "cursor-not-allowed opacity-50"
-                          : "text-[var(--color-text-body)] hover:bg-[var(--color-bg-gray)]"
+                          : "text-[var(--color-text-body)] hover:bg-bg-gray"
                     }`}
                   >
                     <span
                       className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[6px] border ${
                         selected
-                          ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                          : "border-[var(--color-border-strong)] bg-[var(--color-bg-white)] text-transparent"
+                          ? "border-[var(--color-primary)] bg-primary text-white"
+                          : "border-[var(--color-border-strong)] bg-bg-white text-transparent"
                       }`}
                     >
                       <svg
@@ -339,7 +339,7 @@ export function ApplyInfoStep({
     option === "기타" ? "기타(직접 입력)" : option;
 
   return (
-    <section className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14">
+    <section className="rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:p-14">
       <div className="mx-auto mb-12 max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           응답자 정보
@@ -352,8 +352,8 @@ export function ApplyInfoStep({
         {INFO_FIELDS.map((field) => {
           const fieldError = fieldErrors[field.key];
           const inputClassName = fieldError
-            ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-            : "border-transparent bg-[var(--color-bg-gray)]";
+            ? "border-[var(--color-primary)] bg-primary-soft"
+            : "border-transparent bg-bg-gray";
 
           return (
             <div
@@ -380,7 +380,7 @@ export function ApplyInfoStep({
                     onChange={(event) =>
                       onUpdateField(field.key, event.target.value)
                     }
-                    className={`h-14 w-full appearance-none rounded-[18px] border px-5 pr-12 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${inputClassName}`}
+                    className={`h-14 w-full appearance-none rounded-[18px] border px-5 pr-12 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-bg-white ${inputClassName}`}
                   >
                     <option value="">거주지를 선택해주세요</option>
                     {field.options?.map((option) => (
@@ -411,7 +411,7 @@ export function ApplyInfoStep({
                   onChange={(event) =>
                     onUpdateField(field.key, event.target.value)
                   }
-                  className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${inputClassName}`}
+                  className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-bg-white ${inputClassName}`}
                 />
               )}
 
@@ -446,10 +446,10 @@ export function ApplyInfoStep({
                   key={option}
                   className={`flex cursor-pointer items-center gap-3 rounded-[20px] border px-4 py-4 transition-colors ${
                     checked
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      ? "border-[var(--color-primary)] bg-primary-soft"
                       : hasError
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                        : "border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] hover:border-[var(--color-border-strong)]"
+                        ? "border-[var(--color-primary)] bg-primary-soft"
+                        : "border-[var(--color-border-soft)] bg-bg-gray hover:border-[var(--color-border-strong)]"
                   }`}
                 >
                   <input
@@ -465,8 +465,8 @@ export function ApplyInfoStep({
                   <span
                     className={`flex size-5 shrink-0 rounded-full border transition-colors ${
                       checked
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
-                        : "border-[var(--color-border-strong)] bg-[var(--color-bg-white)]"
+                        ? "border-[var(--color-primary)] bg-primary shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
+                        : "border-[var(--color-border-strong)] bg-bg-white"
                     }`}
                   />
                   <span className="text-[15px] font-medium text-[var(--color-text-body)]">
@@ -518,10 +518,10 @@ export function ApplyInfoStep({
               onChange={(event) =>
                 onUpdateField("consultationTopicDetail", event.target.value)
               }
-              className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${
+              className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-bg-white ${
                 fieldErrors.consultationTopicDetail
-                  ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                  : "border-transparent bg-[var(--color-bg-gray)]"
+                  ? "border-[var(--color-primary)] bg-primary-soft"
+                  : "border-transparent bg-bg-gray"
               }`}
             />
             {fieldErrors.consultationTopicDetail ? (
@@ -569,10 +569,10 @@ export function ApplyInfoStep({
               onChange={(event) =>
                 onUpdateField("supportTopicsDetail", event.target.value)
               }
-              className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-[var(--color-bg-white)] ${
+              className={`h-14 w-full rounded-[18px] border px-5 text-[15px] text-[var(--color-text-body)] outline-none transition-colors placeholder:text-[var(--color-text-sub)] focus:border-[var(--color-border-strong)] focus:bg-bg-white ${
                 fieldErrors.supportTopicsDetail
-                  ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                  : "border-transparent bg-[var(--color-bg-gray)]"
+                  ? "border-[var(--color-primary)] bg-primary-soft"
+                  : "border-transparent bg-bg-gray"
               }`}
             />
             {fieldErrors.supportTopicsDetail ? (
@@ -602,10 +602,10 @@ export function ApplyInfoStep({
                   key={option}
                   className={`flex cursor-pointer items-center gap-3 rounded-[20px] border px-4 py-4 transition-colors ${
                     checked
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      ? "border-[var(--color-primary)] bg-primary-soft"
                       : hasError
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                        : "border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] hover:border-[var(--color-border-strong)]"
+                        ? "border-[var(--color-primary)] bg-primary-soft"
+                        : "border-[var(--color-border-soft)] bg-bg-gray hover:border-[var(--color-border-strong)]"
                   }`}
                 >
                   <input
@@ -621,8 +621,8 @@ export function ApplyInfoStep({
                   <span
                     className={`flex size-5 shrink-0 rounded-full border transition-colors ${
                       checked
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
-                        : "border-[var(--color-border-strong)] bg-[var(--color-bg-white)]"
+                        ? "border-[var(--color-primary)] bg-primary shadow-[inset_0_0_0_4px_var(--color-primary-soft)]"
+                        : "border-[var(--color-border-strong)] bg-bg-white"
                     }`}
                   />
                   <span className="text-[15px] font-medium text-[var(--color-text-body)]">
@@ -660,10 +660,10 @@ export function ApplyInfoStep({
                   key={option}
                   className={`flex cursor-pointer items-start gap-3 rounded-[20px] border px-4 py-4 transition-colors ${
                     checked
-                      ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
+                      ? "border-[var(--color-primary)] bg-primary-soft"
                       : hasError
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary-soft)]"
-                        : "border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] hover:border-[var(--color-border-strong)]"
+                        ? "border-[var(--color-primary)] bg-primary-soft"
+                        : "border-[var(--color-border-soft)] bg-bg-gray hover:border-[var(--color-border-strong)]"
                   } ${selectionLimitReached ? "cursor-not-allowed opacity-55" : ""}`}
                 >
                   <input
@@ -678,8 +678,8 @@ export function ApplyInfoStep({
                   <span
                     className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-[6px] border transition-colors ${
                       checked
-                        ? "border-[var(--color-primary)] bg-[var(--color-primary)] text-white"
-                        : "border-[var(--color-border-strong)] bg-[var(--color-bg-white)] text-transparent"
+                        ? "border-[var(--color-primary)] bg-primary text-white"
+                        : "border-[var(--color-border-strong)] bg-bg-white text-transparent"
                     }`}
                   >
                     <svg
@@ -712,11 +712,11 @@ export function ApplyInfoStep({
           ) : null}
         </div>
 
-        <div className="mx-auto max-w-[36rem] rounded-[24px] border border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] p-5 text-left">
+        <div className="mx-auto max-w-[36rem] rounded-[24px] border border-[var(--color-border-soft)] bg-bg-gray p-5 text-left">
           <p className="text-[15px] font-semibold text-[var(--color-text-body)] md:text-[17px]">
             개인정보 수집 및 이용 동의
           </p>
-          <div className="mt-3 rounded-[18px] bg-[var(--color-bg-white)] px-4 py-4 text-sm leading-6 text-[var(--color-text-sub)]">
+          <div className="mt-3 rounded-[18px] bg-bg-white px-4 py-4 text-sm leading-6 text-[var(--color-text-sub)]">
             <p className="font-semibold text-[var(--color-text-body)]">
               개인정보 수집 및 이용 동의서
             </p>
@@ -734,7 +734,7 @@ export function ApplyInfoStep({
             </p>
             <p className="mt-2">1. 개인정보를 제공받는 자: 헤세드릿지</p>
           </div>
-          <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-[var(--color-bg-white)] px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]">
+          <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-bg-white px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]">
             <input
               type="checkbox"
               name="privacyConsent"
@@ -742,7 +742,7 @@ export function ApplyInfoStep({
               onChange={(event) => onPrivacyConsentChange(event.target.checked)}
               className="peer sr-only"
             />
-            <span className="flex size-6 shrink-0 items-center justify-center rounded-[8px] border border-[var(--color-border-strong)] bg-[var(--color-bg-white)] text-transparent transition-all peer-checked:border-[var(--color-primary)] peer-checked:bg-[var(--color-primary)] peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-primary-soft)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--color-bg-white)]">
+            <span className="flex size-6 shrink-0 items-center justify-center rounded-[8px] border border-[var(--color-border-strong)] bg-bg-white text-transparent transition-all peer-checked:border-[var(--color-primary)] peer-checked:bg-primary peer-checked:text-white peer-focus-visible:ring-2 peer-focus-visible:ring-[var(--color-primary-soft)] peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-[var(--color-bg-white)]">
               <svg
                 viewBox="0 0 16 16"
                 aria-hidden="true"
@@ -767,7 +767,7 @@ export function ApplyInfoStep({
       </div>
 
       {submitError ? (
-        <div className="mx-auto max-w-[36rem] rounded-[20px] border border-[var(--color-primary)] bg-[var(--color-primary-soft)] px-4 py-3 text-left text-sm font-medium text-[var(--color-primary-strong)]">
+        <div className="mx-auto max-w-[36rem] rounded-[20px] border border-[var(--color-primary)] bg-primary-soft px-4 py-3 text-left text-sm font-medium text-[var(--color-primary-strong)]">
           {submitError}
         </div>
       ) : null}

@@ -18,7 +18,7 @@ export function ApplyQuestionStep({
   return (
     <section
       ref={sectionRef}
-      className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14"
+      className="rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:p-14"
     >
       <div className="mx-auto mb-12 max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
@@ -33,10 +33,10 @@ export function ApplyQuestionStep({
         {QUESTIONS.map((question, index) => (
           <li
             key={question}
-            className="rounded-[30px] border border-[var(--color-border-soft)] bg-[var(--color-bg-gray)] p-6 md:p-9"
+            className="rounded-[30px] border border-[var(--color-border-soft)] bg-bg-gray p-6 md:p-9"
           >
             <div className="mb-7 flex flex-col items-center gap-3 md:gap-4">
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[var(--color-primary)] text-sm font-semibold text-white md:size-10 md:text-base">
+              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white md:size-10 md:text-base">
                 {index + 1}
               </span>
               <p className="max-w-[52rem] pt-0.5 text-[16px] font-semibold leading-7 tracking-[-0.02em] text-[var(--color-text-dark)] md:text-[19px] md:leading-8">
@@ -52,8 +52,8 @@ export function ApplyQuestionStep({
                     key={option.label}
                     className={`inline-flex min-h-12 cursor-pointer items-center justify-between rounded-[18px] border px-4 py-3.5 text-sm transition-colors md:min-h-14 md:px-5 md:text-[15px] ${
                       selected
-                        ? "border-[var(--color-border-strong)] bg-[var(--color-primary-soft)] text-[var(--color-text-dark)]"
-                        : "border-transparent bg-[var(--color-bg-white)] text-[var(--color-text-body)] hover:border-[var(--color-border-soft)] hover:bg-[var(--color-bg-warm-light)]"
+                        ? "border-[var(--color-border-strong)] bg-primary-soft text-[var(--color-text-dark)]"
+                        : "border-transparent bg-bg-white text-[var(--color-text-body)] hover:border-[var(--color-border-soft)] hover:bg-bg-warm-light"
                     }`}
                   >
                     <input
@@ -70,8 +70,8 @@ export function ApplyQuestionStep({
                     <span
                       className={`inline-flex min-w-10 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${
                         selected
-                          ? "bg-[var(--color-primary)] text-white"
-                          : "bg-[var(--color-bg-gray)] text-[var(--color-text-sub)]"
+                          ? "bg-primary text-white"
+                          : "bg-bg-gray text-[var(--color-text-sub)]"
                       }`}
                     >
                       {option.score}점

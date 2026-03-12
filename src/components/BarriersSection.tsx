@@ -31,10 +31,13 @@ export default function BarriersSection() {
         <p className="mx-auto mb-12 max-w-5xl text-center text-[18px] font-extrabold leading-[1.45] tracking-[-0.035em] text-text-dark md:mb-16 md:text-[32px]">
           우울 , 불안 , 스트레스 등 정서적 어려움을 겪는
           <br />
+          <span className="text-primary-strong">경기도민</span> 또는{" "}
           <span className="text-primary-strong">
-            경기도민 또는 경기도 재직자
+            경기도 소재 회사에 재직중인 직장인
           </span>
-          를 위한 <span className="text-primary-strong">무료 심리상담</span>{" "}
+          을 위한
+          <br />
+          <span className="text-primary-strong">무료 심리상담</span>{" "}
           지원사업입니다
         </p>
 
@@ -61,7 +64,7 @@ export default function BarriersSection() {
             부담 없이 지금 시작해보세요.
           </p>
         </div>
-        <div className="grid gap-5 md:grid-cols-3 md:gap-7 md:max-w-5xl mx-auto">
+        <div className="grid gap-5 sm:grid-cols-3 md:gap-7 md:max-w-5xl mx-auto">
           {BENEFITS.map((benefit) => (
             <BenefitCard
               key={benefit.lines.join("-")}

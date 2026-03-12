@@ -6,7 +6,7 @@ type ApplyIneligibleStepProps = {
 
 export function ApplyIneligibleStep({ onRetry }: ApplyIneligibleStepProps) {
   return (
-    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:mt-16 md:p-14">
+    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:mt-16 md:p-14">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           이번 프로젝트의 대상자가 아닙니다
@@ -36,7 +36,7 @@ export function ApplyIneligibleStep({ onRetry }: ApplyIneligibleStepProps) {
       <button
         type="button"
         onClick={onRetry}
-        className="mt-8 rounded-full border border-[var(--color-border-strong)] bg-[var(--color-bg-white)] px-10 py-4 text-[16px] font-semibold text-[var(--color-text-body)] transition-colors hover:bg-[var(--color-bg-gray)] md:text-[17px]"
+        className="mt-8 rounded-full border border-[var(--color-border-strong)] bg-bg-white px-10 py-4 text-[16px] font-semibold text-[var(--color-text-body)] transition-colors hover:bg-bg-gray md:text-[17px]"
       >
         다시 확인하기
       </button>

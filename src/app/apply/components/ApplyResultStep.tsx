@@ -29,7 +29,7 @@ export function ApplyResultStep({
   }[isSafe ? "safe" : "unsafe"];
 
   return (
-    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:mt-16 md:p-14">
+    <section className="mt-14 rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:mt-16 md:p-14">
       <div className="mx-auto max-w-3xl text-center">
         <p
           className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resultBadgeClass}`}
@@ -43,7 +43,7 @@ export function ApplyResultStep({
           {resultBand.description}
         </p>
       </div>
-      <div className="mx-auto mt-8 max-w-3xl rounded-[28px] bg-[var(--color-bg-warm)] px-6 py-9 text-center">
+      <div className="mx-auto mt-8 max-w-3xl rounded-[28px] bg-bg-warm px-6 py-9 text-center">
         <p className="text-base font-semibold leading-7 text-[var(--color-text-dark)] md:text-lg md:leading-8">
           {content.title}
         </p>
@@ -54,7 +54,7 @@ export function ApplyResultStep({
           <button
             type="button"
             onClick={onProceedToApply}
-            className="mt-6 rounded-full bg-[var(--color-primary)] px-8 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-[var(--color-primary-light)]"
+            className="mt-6 rounded-full bg-primary px-8 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-primary-light"
           >
             상담 신청하기
           </button>
