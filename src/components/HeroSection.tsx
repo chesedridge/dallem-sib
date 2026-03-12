@@ -23,7 +23,7 @@ export default function HeroSection() {
             alt="달램 로고"
             width={782}
             height={319}
-            className="h-auto w-24 md:w-39 translate-x-4 -translate-y-2"
+            className="h-auto w-24 md:w-39 translate-x-4 -translate-y-2 md:-translate-y-4"
             priority
           />
         </div>
