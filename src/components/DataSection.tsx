@@ -39,22 +39,24 @@ export default function DataSection() {
           <p className="mb-8 text-center text-[18px] font-extrabold tracking-[-0.03em] text-text-dark md:mb-10 md:text-[26px]">
             심리상담의 주요 성과
           </p>
-          <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-4 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-20 md:py-6">
-            {RESULT_ITEMS.map((text) => (
-              <div
-                key={text}
-                className="flex items-center gap-3 py-3 md:gap-4 md:py-4"
-              >
-                <CheckCircleIcon className="h-6 w-6 shrink-0 md:h-7 md:w-7" />
-                <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">
-                  {text}
-                </span>
-              </div>
-            ))}
+          <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-7 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-10 md:py-6">
+            <div className="w-fit mx-auto">
+              {RESULT_ITEMS.map((text) => (
+                <div
+                  key={text}
+                  className="flex items-center gap-3 py-1 md:gap-4 md:py-3"
+                >
+                  <CheckCircleIcon className="h-6 w-6 shrink-0 md:h-7 md:w-7" />
+                  <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">
+                    {text}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 text-center md:mt-20">
+        <div className="mt-20 text-center md:mt-30">
           <p className="text-[18px] font-extrabold leading-[1.35] tracking-[-0.03em] text-primary-strong md:text-[30px]">
             부담 없이 지금, 첫 상담을 시작해보세요.
           </p>

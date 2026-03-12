@@ -20,9 +20,28 @@ const INFO_ITEMS = [
     label: "참여 방법",
     value: "우울증 테스트 진행 후 결과에 따라 상담 신청",
   },
-    {
+  {
     label: "이용문의",
-    value: "카카오톡 채널 달램 (Dallem)’ 또는 help@dallem.com",
+    value: (
+      <>
+        카카오톡 채널{" "}
+        <a
+          href="http://pf.kakao.com/_NhcZT"
+          target="_blank"
+          className="hidden md:inline-block font-bold text-primary-strong! hover:underline! underline-offset-3!"
+        >
+          달램(Dallem)<sup>↗</sup>
+        </a>
+        <a
+          href="http://pf.kakao.com/_NhcZT/chat"
+          target="_blank"
+          className="md:hidden font-bold text-primary-strong! hover:underline! underline-offset-3!"
+        >
+          달램(Dallem)<sup>↗</sup>
+        </a>{" "}
+        또는 help@dallem.com
+      </>
+    ),
   },
 ];
 
@@ -36,7 +55,7 @@ export default function ProjectInfoList({ className }: { className: string }) {
           <span className="text-left shrink-0 px-4 py-1.5 text-[14px] w-26 font-bold text-primary-strong md:px-5 md:py-2 md:text-[15px]">
             {item.label}
           </span>
-          <span className="text-[14px] leading-7 text-text-body md:text-[16px] md:leading-8">
+          <span className="text-left text-[14px] leading-5 text-text-body md:text-[16px] md:leading-8">
             {item.value}
           </span>
         </div>

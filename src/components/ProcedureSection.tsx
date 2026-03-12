@@ -71,7 +71,7 @@ export default function ProcedureSection() {
                   key={step.num}
                   className="relative z-10 flex flex-1 flex-col items-center gap-6"
                 >
-                  <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-primary text-[20px] font-bold text-white shadow-[0_4px_16px_rgba(240,135,119,0.25)]">
+                  <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-primary text-[20px] font-bold text-white">
                     {step.num}
                   </div>
                   <div className="w-full px-2 text-center">
@@ -88,7 +88,7 @@ export default function ProcedureSection() {
           </div>
         </div>
 
-        <div className="section-cta">
+        <div className="section-cta pt-10">
           <CtaButton>상담 신청하러 가기</CtaButton>
         </div>
       </div>

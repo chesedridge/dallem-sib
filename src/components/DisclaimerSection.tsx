@@ -1,7 +1,7 @@
 export default function DisclaimerSection() {
   return (
-    <section className="w-full bg-bg-gray">
-      <div className="mx-auto max-w-[1400px] px-6 py-10 md:px-10 md:py-20">
+    <section className="w-full bg-bg-warm">
+      <div className="mx-auto max-w-[1400px] px-6 py-10 md:px-10 md:py-30">
         <p className="text-center text-[16px] leading-[1.8] font-bold tracking-[-0.02em] text-text-sub md:text-[25px] md:leading-[1.8]">
           <span className="md:hidden">
             이 프로젝트는 상업적 광고나 유료 서비스가 아닙니다. 당신의 마음을

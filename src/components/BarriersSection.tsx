@@ -38,15 +38,15 @@ export default function BarriersSection() {
           지원사업입니다
         </p>
 
-        <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-4 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-20 md:py-6">
-          <div className="mx-auto w-fit">
+        <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-5 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-20 md:py-6">
+          <div className="mx-auto w-fit mb-2">
             <p className="my-3 text-center text-[16px] font-bold tracking-[-0.02em] text-text-dark md:my-4 md:text-[20px]">
               이런 이유로 상담을 미뤄오셨나요?
             </p>
             {BARRIER_ITEMS.map((text, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 py-3 md:gap-4 md:py-4"
+                className="flex items-center gap-3 py-3 md:gap-4 md:py-3"
               >
                 <CheckCircleIcon className="h-6 w-6 shrink-0 md:h-7 md:w-7" />
                 <span className="text-[15px] leading-7 text-text-body md:text-[17px] md:leading-8">
@@ -56,7 +56,7 @@ export default function BarriersSection() {
             ))}
           </div>
         </div>
-        <div className="mb-12 mt-20 text-center md:mt-30 md:mb-16">
+        <div className="mb-12 mt-20 text-center md:mt-40 md:mb-16">
           <p className="text-[20px] font-extrabold leading-[1.3] tracking-[-0.03em] text-text-dark md:text-[32px]">
             부담 없이 지금 시작해보세요.
           </p>
@@ -76,7 +76,7 @@ export default function BarriersSection() {
           ))}
         </div>
 
-        <div className="mb:12 mt-20 text-center md:mt-30 md:mb-16">
+        <div className="mb:12 mt-20 text-center md:mt-40 md:mb-16">
           <p className="text-[20px] font-extrabold leading-[1.3] tracking-[-0.03em] text-text-dark md:text-[30px] md:leading-[1.35] mb-1">
             누구나 힘들 수 있습니다.
           </p>

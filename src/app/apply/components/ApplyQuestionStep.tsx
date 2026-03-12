@@ -20,16 +20,11 @@ export function ApplyQuestionStep({
       ref={sectionRef}
       className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14"
     >
-      <div className="mb-12">
-        <div className="mb-2 flex items-center justify-center gap-3">
-          <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">
-            문항응답
-          </h2>
-          <span className="text-sm font-medium text-[var(--color-text-sub)] md:text-base">
-            / 총 9문항
-          </span>
-        </div>
-        <p className="text-[15px] leading-7 text-[var(--color-text-sub)] md:text-[17px] md:leading-8">
+      <div className="mx-auto mb-12 max-w-3xl text-center">
+        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
+          문항응답
+        </h2>
+        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
           지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
         </p>
       </div>

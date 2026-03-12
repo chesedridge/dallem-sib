@@ -8,6 +8,7 @@ import { ApplyIneligibleStep } from "./components/ApplyIneligibleStep";
 import { ApplyIntroStep } from "./components/ApplyIntroStep";
 import { ApplyQuestionStep } from "./components/ApplyQuestionStep";
 import { ApplyResultStep } from "./components/ApplyResultStep";
+import { ApplySubmittedStep } from "./components/ApplySubmittedStep";
 import {
   DEFAULT_DEBUG_ANSWERS,
   DEFAULT_DEBUG_INFO,
@@ -29,13 +30,13 @@ const DEBUG_STEPS: FormStep[] = [
   "question",
   "info",
   "result",
+  "submitted",
   "ineligible",
 ];
 
 export default function TestPage() {
   const isDebugMode = process.env.NODE_ENV !== "production";
   const [formStep, setFormStep] = useState<FormStep>("intro");
-  const [applicationSubmitted, setApplicationSubmitted] = useState(false);
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
     contact: "",
@@ -257,7 +258,9 @@ export default function TestPage() {
     privacyConsent: info.privacyConsent || DEFAULT_DEBUG_INFO.privacyConsent,
   });
 
-  const fillDebugForm = (nextStep: "info" | "result" = "info") => {
+  const fillDebugForm = (
+    nextStep: "info" | "result" | "submitted" = "info",
+  ) => {
     const nextAnswers = answers.map((score, index) =>
       score >= 0 ? score : DEFAULT_DEBUG_ANSWERS[index],
     );
@@ -266,25 +269,23 @@ export default function TestPage() {
     setFieldErrors({});
     setSubmitError("");
     setIsSubmitting(false);
-    setApplicationSubmitted(false);
     setAnswers(nextAnswers);
     setInfo(nextInfo);
 
-    if (nextStep === "result") {
-      setTotalScore(nextAnswers.reduce((acc, current) => acc + current, 0));
-      setFormStep("result");
+    if (nextStep === "info") {
+      setTotalScore(null);
+      setFormStep("info");
       return;
     }
 
-    setTotalScore(null);
-    setFormStep("info");
+    setTotalScore(nextAnswers.reduce((acc, current) => acc + current, 0));
+    setFormStep(nextStep);
   };
 
   const moveToDebugStep = (nextStep: FormStep) => {
     setFieldErrors({});
     setSubmitError("");
     setIsSubmitting(false);
-    setApplicationSubmitted(false);
 
     if (nextStep === "intro") {
       setTotalScore(null);
@@ -315,7 +316,12 @@ export default function TestPage() {
       return;
     }
 
-    fillDebugForm("result");
+    if (nextStep === "result") {
+      fillDebugForm("result");
+      return;
+    }
+
+    fillDebugForm("submitted");
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -328,7 +334,6 @@ export default function TestPage() {
 
       setFieldErrors({});
       setSubmitError("");
-      setApplicationSubmitted(false);
       setTotalScore(answers.reduce((acc, current) => acc + current, 0));
       setFormStep("result");
       return;
@@ -446,9 +451,8 @@ export default function TestPage() {
         return;
       }
 
-      setApplicationSubmitted(true);
       setTotalScore(score);
-      setFormStep("result");
+      setFormStep("submitted");
     } catch {
       setSubmitError(
         "응답 저장 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
@@ -617,11 +621,14 @@ export default function TestPage() {
 
         {formStep === "result" && resultBand ? (
           <ApplyResultStep
-            applicationSubmitted={applicationSubmitted}
             onProceedToApply={() => setFormStep("info")}
             resultBadgeClass={resultBadgeClass}
             resultBand={resultBand}
           />
+        ) : null}
+
+        {formStep === "submitted" && resultBand ? (
+          <ApplySubmittedStep />
         ) : null}
       </main>
 

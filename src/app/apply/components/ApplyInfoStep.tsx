@@ -340,14 +340,14 @@ export function ApplyInfoStep({
 
   return (
     <section className="rounded-[36px] border border-[var(--color-border-soft)] bg-[var(--color-bg-white)] p-8 text-center md:p-14">
-      <div className="mb-2">
-        <h2 className="text-[24px] font-semibold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-[30px]">
+      <div className="mx-auto mb-12 max-w-3xl text-center">
+        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           응답자 정보
         </h2>
+        <p className="text-[15px] leading-7 break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
+          대상자분에게 상담 예약을 위해 담당자가 직접 연락 드릴 예정입니다.
+        </p>
       </div>
-      <p className="mb-12 text-[15px] leading-7 text-[var(--color-text-sub)] md:text-[17px] md:leading-8">
-        대상자분에게 상담 예약을 위해 담당자가 직접 연락 드릴 예정입니다.
-      </p>
       <div className="space-y-9">
         {INFO_FIELDS.map((field) => {
           const fieldError = fieldErrors[field.key];

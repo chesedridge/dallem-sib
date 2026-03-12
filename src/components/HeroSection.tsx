@@ -1,8 +1,8 @@
+import Image from "next/image";
+
 import CtaButton from "@/components/CtaButton";
 import {
-  HeroBackdrop,
   HeroBadgeChip,
-  HeroFeatureStrip,
   MouseArrowIcon,
 } from "@/components/VectorArtwork";
 import ProjectInfoList from "./ProjectInfoList";
@@ -17,6 +17,17 @@ export default function HeroSection() {
       </div>
 
       <div className="relative z-10 flex w-full flex-col px-6 py-8 md:px-14 md:py-14">
+        <div className="absolute right-6 top-8 md:right-14 md:top-14">
+          <Image
+            src="/logo.png"
+            alt="달램 로고"
+            width={782}
+            height={319}
+            className="h-auto w-24 md:w-39 translate-x-4 -translate-y-2"
+            priority
+          />
+        </div>
+
         <HeroBadgeChip />
 
         <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center justify-center pb-32 pt-14 text-center md:pb-28 md:pt-12">

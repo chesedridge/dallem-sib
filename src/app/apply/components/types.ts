@@ -50,4 +50,5 @@ export type FormStep =
   | "question"
   | "info"
   | "result"
+  | "submitted"
   | "ineligible";

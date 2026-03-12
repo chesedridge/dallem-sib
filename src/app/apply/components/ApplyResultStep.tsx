@@ -3,14 +3,12 @@
 import type { ResultBand } from "./types";
 
 type ApplyResultStepProps = {
-  applicationSubmitted: boolean;
   onProceedToApply: () => void;
   resultBadgeClass: string;
   resultBand: ResultBand;
 };
 
 export function ApplyResultStep({
-  applicationSubmitted,
   onProceedToApply,
   resultBadgeClass,
   resultBand,
@@ -25,9 +23,8 @@ export function ApplyResultStep({
     },
     unsafe: {
       title: "이번 프로젝트 대상자입니다!",
-      description: applicationSubmitted
-        ? "달램 담당자가 입력하신 연락처로 자세한 사항을 안내드릴 예정이오니 조금만 기다려주세요. \n궁금하신 사항이 있다면 카카오톡 채널 ’달램(Dallem)’ 또는 help@dallem.com으로 연락주세요."
-        : "상담 신청을 원하시면 아래 버튼을 눌러 응답자 정보를 남겨주세요. 신청 후 담당자가 연락을 드릴 예정입니다.",
+      description:
+        "상담 신청을 원하시면 아래 버튼을 눌러 응답자 정보를 남겨주세요. 신청 후 담당자가 연락을 드릴 예정입니다.",
     },
   }[isSafe ? "safe" : "unsafe"];
 
@@ -42,7 +39,7 @@ export function ApplyResultStep({
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           {resultBand.title}
         </h2>
-        <p className="text-[15px] leading-7 whitespace-pre text-[var(--color-text-body)] md:text-[18px] md:leading-8">
+        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
           {resultBand.description}
         </p>
       </div>
@@ -50,10 +47,10 @@ export function ApplyResultStep({
         <p className="text-base font-semibold leading-7 text-[var(--color-text-dark)] md:text-lg md:leading-8">
           {content.title}
         </p>
-        <p className="mt-3 text-sm leading-6 whitespace-pre text-[var(--color-text-body)] md:text-base md:leading-7">
+        <p className="mt-3 text-sm leading-6 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-base md:leading-7">
           {content.description}
         </p>
-        {!isSafe && !applicationSubmitted ? (
+        {!isSafe ? (
           <button
             type="button"
             onClick={onProceedToApply}
