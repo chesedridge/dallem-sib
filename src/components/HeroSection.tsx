@@ -37,7 +37,7 @@ export default function HeroSection() {
             우리와 함께 이야기해 보세요.
           </h1>
           <p className="mt-7 max-w-[800px] text-[15px] leading-[1.55] tracking-[-0.02em] text-primary-strong md:mt-10 md:text-[26px] md:leading-[1.4]">
-            <strong className="font-bold">경기도민</strong> 또는{" "}
+            <strong className="font-bold">경기도 거주자</strong> 또는{" "}
             <strong className="font-bold">경기도 소재 회사 재직중</strong>이라면,
             <br />1인당 4회{" "}
             <strong className="font-bold">무료 심리상담</strong>을 받을 수

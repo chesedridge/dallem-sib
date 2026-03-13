@@ -524,7 +524,7 @@ export default function TestPage() {
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
           <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            경기도민 또는 경기도 소재 회사에 재직중인 직장인을 위한
+            경기도 거주자 또는 경기도 소재 회사에 재직중인 직장인을 위한
           </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
             멘탈케어 프로젝트

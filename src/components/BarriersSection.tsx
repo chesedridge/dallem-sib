@@ -31,7 +31,7 @@ export default function BarriersSection() {
         <p className="mx-auto mb-12 max-w-5xl text-center text-[18px] font-extrabold leading-[1.45] tracking-[-0.035em] text-text-dark md:mb-16 md:text-[32px]">
           우울 , 불안 , 스트레스 등 정서적 어려움을 겪는
           <br />
-          <span className="text-primary-strong">경기도민</span> 또는{" "}
+          <span className="text-primary-strong">경기도 거주자</span> 또는{" "}
           <span className="text-primary-strong">
             경기도 소재 회사에 재직중인 직장인
           </span>
