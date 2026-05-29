@@ -10,13 +10,6 @@ import {
 
 const MAIN_PAGE_BUTTON_CLICK_EVENT_NAME = "main_page_button_click";
 
-const ANALYTICS_HEADERS = [
-  "날짜",
-  "일간 '/' 라우트 뷰 수",
-  "유니크 유저 수",
-  "/페이지 내 버튼 클릭수",
-] as const;
-
 const GOOGLE_SHEETS_DATE_EPOCH_MS = Date.UTC(1899, 11, 30);
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -381,8 +374,7 @@ export async function syncGaAnalyticsToSheets() {
       }
     : null;
 
-  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A:D", [
-    Array.from(ANALYTICS_HEADERS),
+  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A2:D", "A2", [
     ...mergedRows.map(sheetValuesFromDailyRow),
   ]);
 
