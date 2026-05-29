@@ -34,24 +34,32 @@ export type GoogleSheetsConfig = {
   sheetName: string;
 };
 
+function stripWrappingQuotes(value?: string) {
+  if (!value) {
+    return value;
+  }
+
+  const trimmedValue = value.trim();
+  const hasWrappingQuotes =
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"));
+
+  return hasWrappingQuotes ? trimmedValue.slice(1, -1) : trimmedValue;
+}
+
 export function sheetRange(sheetName: string, range: string) {
   const escapedSheetName = sheetName.replace(/'/g, "''");
   return `'${escapedSheetName}'!${range}`;
 }
 
 function normalizePrivateKey(privateKey?: string) {
-  if (!privateKey) {
+  const strippedPrivateKey = stripWrappingQuotes(privateKey);
+
+  if (!strippedPrivateKey) {
     return null;
   }
 
-  const trimmedKey = privateKey.trim();
-  const withoutWrappingQuotes =
-    (trimmedKey.startsWith('"') && trimmedKey.endsWith('"')) ||
-    (trimmedKey.startsWith("'") && trimmedKey.endsWith("'"))
-      ? trimmedKey.slice(1, -1)
-      : trimmedKey;
-
-  return withoutWrappingQuotes.replace(/\\n/g, "\n").replace(/\r\n/g, "\n");
+  return strippedPrivateKey.replace(/\\n/g, "\n").replace(/\r\n/g, "\n");
 }
 
 function parseServiceAccountJson(rawValue?: string): GoogleServiceAccountJson | null {
@@ -67,15 +75,20 @@ function parseServiceAccountJson(rawValue?: string): GoogleServiceAccountJson | 
 }
 
 function getGoogleServiceAccountConfig() {
-  const serviceAccountJsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
+  const serviceAccountJsonBase64 = stripWrappingQuotes(
+    process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64,
+  );
   const decodedServiceAccountJson = serviceAccountJsonBase64
     ? Buffer.from(serviceAccountJsonBase64, "base64").toString("utf8")
     : undefined;
   const serviceAccountJson =
     parseServiceAccountJson(decodedServiceAccountJson) ??
-    parseServiceAccountJson(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
+    parseServiceAccountJson(
+      stripWrappingQuotes(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
+    );
   const serviceAccountEmail =
-    serviceAccountJson?.client_email ?? process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    serviceAccountJson?.client_email ??
+    stripWrappingQuotes(process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
   const privateKey = normalizePrivateKey(
     serviceAccountJson?.private_key ?? process.env.GOOGLE_PRIVATE_KEY,
   );
@@ -91,10 +104,10 @@ function getGoogleServiceAccountConfig() {
 }
 
 export function getGoogleSheetsConfig(
-  sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME ?? "Sheet1",
+  sheetName = stripWrappingQuotes(process.env.GOOGLE_SHEETS_SHEET_NAME) ?? "Sheet1",
 ): GoogleSheetsConfig | null {
   const serviceAccountConfig = getGoogleServiceAccountConfig();
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+  const spreadsheetId = stripWrappingQuotes(process.env.GOOGLE_SHEETS_SPREADSHEET_ID);
 
   if (!serviceAccountConfig || !spreadsheetId) {
     return null;
@@ -170,6 +183,20 @@ export async function getSpreadsheetSheetTitles(
     .filter((title): title is string => Boolean(title)) ?? [];
 }
 
+export async function getSpreadsheetSheetTitleById(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  sheetId: number,
+) {
+  const { data } = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets.properties(sheetId,title)",
+  });
+
+  return data.sheets?.find((sheet) => sheet.properties?.sheetId === sheetId)
+    ?.properties?.title ?? null;
+}
+
 export async function ensureSheetExists(
   sheets: SheetsClient,
   spreadsheetId: string,
@@ -206,6 +233,28 @@ export async function replaceSheetValues(
   await sheets.spreadsheets.values.clear({
     spreadsheetId,
     range: sheetRange(sheetName, "A:Z"),
+  });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: sheetRange(sheetName, "A1"),
+    valueInputOption: "RAW",
+    requestBody: {
+      values,
+    },
+  });
+}
+
+export async function replaceSheetRangeValues(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  sheetName: string,
+  clearRange: string,
+  values: Array<Array<string | number>>,
+) {
+  await sheets.spreadsheets.values.clear({
+    spreadsheetId,
+    range: sheetRange(sheetName, clearRange),
   });
 
   await sheets.spreadsheets.values.update({

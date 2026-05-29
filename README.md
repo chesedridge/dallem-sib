@@ -78,15 +78,19 @@ GA_PROPERTY_ID=527817023
 GA_REPORT_START_DATE=30daysAgo
 GA_REPORT_END_DATE=today
 GA_PAGE_PATH=/
-GOOGLE_SHEETS_ANALYTICS_SUMMARY_SHEET_NAME=GA Latest Summary
-GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME=GA Daily Summary
+GOOGLE_SHEETS_ANALYTICS_SHEET_GID=1695159350
+GOOGLE_SHEETS_ANALYTICS_SHEET_NAME=
 ANALYTICS_SYNC_SECRET=long_random_secret
 ```
 
-The sync endpoint creates or replaces two sheet tabs:
+The sync endpoint writes these columns in the configured analytics sheet tab and updates rows by date:
 
-- `GA Latest Summary`: one row for the current reporting period, used by the main page display.
-- `GA Daily Summary`: daily rows for inspection and manual reporting.
+- A: `날짜`
+- B: `일간 '/' 라우트 뷰 수`
+- C: `유니크 유저 수`
+- D: `/페이지 내 버튼 클릭수`
+
+When `GOOGLE_SHEETS_ANALYTICS_SHEET_GID` is set, the app resolves the tab name from the sheet gid. The current production gid `1695159350` resolves to `시트6`.
 
 ### 3. Trigger the sync
 

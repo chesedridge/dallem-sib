@@ -21,12 +21,8 @@ env:
     value: /
     availability:
       - RUNTIME
-  - variable: GOOGLE_SHEETS_ANALYTICS_SUMMARY_SHEET_NAME
-    value: GA Latest Summary
-    availability:
-      - RUNTIME
-  - variable: GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME
-    value: GA Daily Summary
+  - variable: GOOGLE_SHEETS_ANALYTICS_SHEET_GID
+    value: "1695159350"
     availability:
       - RUNTIME
   - variable: ANALYTICS_SYNC_SECRET

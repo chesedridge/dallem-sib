@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 
 type AnalyticsSummary = {
   activeUsers: number;
-  endDate: string;
+  buttonClicks: number;
+  date: string;
   pagePath: string;
   screenPageViews: number;
-  sessions: number;
-  startDate: string;
   syncedAt: string;
 };
 
@@ -18,18 +17,6 @@ type AnalyticsSummaryResponse = {
 };
 
 const numberFormatter = new Intl.NumberFormat("ko-KR");
-
-function formatDateLabel(value: string) {
-  if (value === "today") {
-    return "오늘";
-  }
-
-  if (value.endsWith("daysAgo")) {
-    return `최근 ${value.replace("daysAgo", "")}일`;
-  }
-
-  return value;
-}
 
 export default function AnalyticsStats() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
@@ -73,10 +60,10 @@ export default function AnalyticsStats() {
             방문 현황
           </p>
           <p className="mt-1 text-sm font-medium text-text-sub md:text-[15px]">
-            {formatDateLabel(summary.startDate)} 기준
+            {summary.date} 기준
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:min-w-[360px] md:gap-6">
+        <div className="grid grid-cols-3 gap-4 md:min-w-[520px] md:gap-6">
           <div>
             <p className="text-[24px] font-extrabold leading-none tracking-[-0.03em] text-text-dark md:text-[32px]">
               {numberFormatter.format(summary.screenPageViews)}
@@ -91,6 +78,14 @@ export default function AnalyticsStats() {
             </p>
             <p className="mt-2 text-sm font-semibold text-text-sub">
               유니크 방문자
+            </p>
+          </div>
+          <div>
+            <p className="text-[24px] font-extrabold leading-none tracking-[-0.03em] text-text-dark md:text-[32px]">
+              {numberFormatter.format(summary.buttonClicks)}
+            </p>
+            <p className="mt-2 text-sm font-semibold text-text-sub">
+              신청 버튼 클릭
             </p>
           </div>
         </div>

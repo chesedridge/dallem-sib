@@ -3,61 +3,48 @@ import {
   getAnalyticsDataClient,
   getGoogleSheetsConfig,
   getSheetsClient,
-  replaceSheetValues,
+  getSpreadsheetSheetTitleById,
+  replaceSheetRangeValues,
   sheetRange,
 } from "@/lib/google";
 
-const ANALYTICS_DAILY_HEADERS = [
-  "날짜",
-  "페이지경로",
-  "조회수",
-  "유니크사용자",
-  "세션수",
-  "참여세션수",
-  "GA속성ID",
-  "동기화시각",
-] as const;
+const MAIN_PAGE_BUTTON_CLICK_EVENT_NAME = "main_page_button_click";
 
-const ANALYTICS_SUMMARY_HEADERS = [
-  "동기화시각",
-  "시작일",
-  "종료일",
-  "페이지경로",
-  "조회수",
-  "유니크사용자",
-  "세션수",
-  "참여세션수",
-  "GA속성ID",
+const ANALYTICS_HEADERS = [
+  "날짜",
+  "일간 '/' 라우트 뷰 수",
+  "유니크 유저 수",
+  "/페이지 내 버튼 클릭수",
 ] as const;
 
 export type AnalyticsSummary = {
   activeUsers: number;
-  engagedSessions: number;
-  endDate: string;
+  buttonClicks: number;
+  date: string;
   pagePath: string;
-  propertyId: string;
   screenPageViews: number;
-  sessions: number;
-  startDate: string;
   syncedAt: string;
 };
 
 type AnalyticsConfig = {
-  dailySheetName: string;
   endDate: string;
   pagePath: string;
   propertyId: string;
   propertyName: string;
+  sheetGid: number | null;
+  sheetName: string;
   spreadsheetId: string;
   startDate: string;
-  summarySheetName: string;
 };
 
-type MetricValues = {
+type DailyMetricValues = {
   activeUsers: number;
-  engagedSessions: number;
   screenPageViews: number;
-  sessions: number;
+};
+
+type DailyRow = DailyMetricValues & {
+  buttonClicks: number;
+  date: string;
 };
 
 let cachedSummary:
@@ -71,9 +58,37 @@ function normalizePropertyId(propertyId: string) {
   return propertyId.replace(/^properties\//, "").trim();
 }
 
+function getOptionalEnv(value?: string) {
+  if (!value) {
+    return undefined;
+  }
+
+  const trimmedValue = value.trim();
+  const hasWrappingQuotes =
+    (trimmedValue.startsWith('"') && trimmedValue.endsWith('"')) ||
+    (trimmedValue.startsWith("'") && trimmedValue.endsWith("'"));
+  const normalizedValue = hasWrappingQuotes
+    ? trimmedValue.slice(1, -1)
+    : trimmedValue;
+
+  return normalizedValue || undefined;
+}
+
+function parseSheetGid(value?: string) {
+  const normalizedValue = getOptionalEnv(value);
+
+  if (!normalizedValue) {
+    return null;
+  }
+
+  const parsed = Number(normalizedValue);
+
+  return Number.isInteger(parsed) ? parsed : null;
+}
+
 function getAnalyticsConfig(): AnalyticsConfig | null {
   const sheetsConfig = getGoogleSheetsConfig();
-  const propertyId = process.env.GA_PROPERTY_ID?.trim();
+  const propertyId = getOptionalEnv(process.env.GA_PROPERTY_ID);
 
   if (!sheetsConfig || !propertyId) {
     return null;
@@ -82,18 +97,17 @@ function getAnalyticsConfig(): AnalyticsConfig | null {
   const normalizedPropertyId = normalizePropertyId(propertyId);
 
   return {
-    dailySheetName:
-      process.env.GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME ??
-      "GA Daily Summary",
-    endDate: process.env.GA_REPORT_END_DATE ?? "today",
-    pagePath: process.env.GA_PAGE_PATH ?? "/",
+    endDate: getOptionalEnv(process.env.GA_REPORT_END_DATE) ?? "today",
+    pagePath: getOptionalEnv(process.env.GA_PAGE_PATH) ?? "/",
     propertyId: normalizedPropertyId,
     propertyName: `properties/${normalizedPropertyId}`,
+    sheetGid: parseSheetGid(process.env.GOOGLE_SHEETS_ANALYTICS_SHEET_GID),
+    sheetName:
+      getOptionalEnv(process.env.GOOGLE_SHEETS_ANALYTICS_SHEET_NAME) ??
+      getOptionalEnv(process.env.GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME) ??
+      "GA Daily Summary",
     spreadsheetId: sheetsConfig.spreadsheetId,
-    startDate: process.env.GA_REPORT_START_DATE ?? "30daysAgo",
-    summarySheetName:
-      process.env.GOOGLE_SHEETS_ANALYTICS_SUMMARY_SHEET_NAME ??
-      "GA Latest Summary",
+    startDate: getOptionalEnv(process.env.GA_REPORT_START_DATE) ?? "30daysAgo",
   };
 }
 
@@ -108,9 +122,11 @@ function metricsFromRow(row?: { metricValues?: Array<{ value?: string | null }> 
   return {
     screenPageViews: parseMetricValue(metricValues[0]?.value),
     activeUsers: parseMetricValue(metricValues[1]?.value),
-    sessions: parseMetricValue(metricValues[2]?.value),
-    engagedSessions: parseMetricValue(metricValues[3]?.value),
-  } satisfies MetricValues;
+  } satisfies DailyMetricValues;
+}
+
+function eventCountFromRow(row?: { metricValues?: Array<{ value?: string | null }> }) {
+  return parseMetricValue(row?.metricValues?.[0]?.value);
 }
 
 function formatGaDate(value?: string | null) {
@@ -122,8 +138,107 @@ function formatGaDate(value?: string | null) {
 }
 
 function parseNumberCell(value?: string) {
-  const parsed = Number(value ?? 0);
+  const parsed = Number(String(value ?? 0).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function dailyRowFromSheetRow(row: Array<string | number>) {
+  const date = String(row[0] ?? "").trim();
+
+  if (!date) {
+    return null;
+  }
+
+  return {
+    activeUsers: parseNumberCell(String(row[2] ?? "")),
+    buttonClicks: parseNumberCell(String(row[3] ?? "")),
+    date,
+    screenPageViews: parseNumberCell(String(row[1] ?? "")),
+  } satisfies DailyRow;
+}
+
+function sheetValuesFromDailyRow(row: DailyRow) {
+  return [row.date, row.screenPageViews, row.activeUsers, row.buttonClicks];
+}
+
+function mergeDailyRows(existingRows: DailyRow[], syncedRows: DailyRow[]) {
+  const rowsByDate = new Map<string, DailyRow>();
+
+  for (const row of existingRows) {
+    rowsByDate.set(row.date, row);
+  }
+
+  for (const row of syncedRows) {
+    rowsByDate.set(row.date, row);
+  }
+
+  return Array.from(rowsByDate.values());
+}
+
+function getDateFromRow(row: {
+  dimensionValues?: Array<{ value?: string | null }>;
+}) {
+  return formatGaDate(row.dimensionValues?.[0]?.value);
+}
+
+function getLatestDailyRow(rows: DailyRow[]) {
+  return rows.at(-1) ?? null;
+}
+
+async function resolveAnalyticsSheetName(config: AnalyticsConfig) {
+  const sheets = getSheetsClient();
+
+  if (!sheets) {
+    return config.sheetName;
+  }
+
+  if (!config.sheetGid) {
+    await ensureSheetExists(sheets, config.spreadsheetId, config.sheetName);
+    return config.sheetName;
+  }
+
+  const sheetName = await getSpreadsheetSheetTitleById(
+    sheets,
+    config.spreadsheetId,
+    config.sheetGid,
+  );
+
+  if (!sheetName) {
+    throw new Error(`Analytics sheet gid ${config.sheetGid} was not found.`);
+  }
+
+  return sheetName;
+}
+
+function createPagePathFilter(pagePath: string) {
+  return {
+    filter: {
+      fieldName: "pagePath",
+      stringFilter: {
+        matchType: "EXACT",
+        value: pagePath,
+      },
+    },
+  };
+}
+
+function createButtonClickFilter(pagePath: string) {
+  return {
+    andGroup: {
+      expressions: [
+        createPagePathFilter(pagePath),
+        {
+          filter: {
+            fieldName: "eventName",
+            stringFilter: {
+              matchType: "EXACT",
+              value: MAIN_PAGE_BUTTON_CLICK_EVENT_NAME,
+            },
+          },
+        },
+      ],
+    },
+  };
 }
 
 export async function syncGaAnalyticsToSheets() {
@@ -135,35 +250,29 @@ export async function syncGaAnalyticsToSheets() {
     return null;
   }
 
-  const dimensionFilter = {
-    filter: {
-      fieldName: "pagePath",
-      stringFilter: {
-        matchType: "EXACT",
-        value: config.pagePath,
-      },
-    },
-  };
-  const metrics = [
-    { name: "screenPageViews" },
-    { name: "activeUsers" },
-    { name: "sessions" },
-    { name: "engagedSessions" },
-  ];
   const dateRanges = [
     {
       startDate: config.startDate,
       endDate: config.endDate,
     },
   ];
+  const orderBys = [
+    {
+      dimension: {
+        dimensionName: "date",
+      },
+    },
+  ];
 
-  const [summaryReport, dailyReport] = await Promise.all([
+  const [pageReport, buttonClickReport] = await Promise.all([
     analyticsData.properties.runReport({
       property: config.propertyName,
       requestBody: {
         dateRanges,
-        dimensionFilter,
-        metrics,
+        dimensions: [{ name: "date" }],
+        dimensionFilter: createPagePathFilter(config.pagePath),
+        metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
+        orderBys,
       },
     }),
     analyticsData.properties.runReport({
@@ -171,64 +280,55 @@ export async function syncGaAnalyticsToSheets() {
       requestBody: {
         dateRanges,
         dimensions: [{ name: "date" }],
-        dimensionFilter,
-        metrics,
-        orderBys: [
-          {
-            dimension: {
-              dimensionName: "date",
-            },
-          },
-        ],
+        dimensionFilter: createButtonClickFilter(config.pagePath),
+        metrics: [{ name: "eventCount" }],
+        orderBys,
       },
     }),
   ]);
 
-  const syncedAt = new Date().toISOString();
-  const summaryMetrics = metricsFromRow(summaryReport.data.rows?.[0]);
-  const summary: AnalyticsSummary = {
-    ...summaryMetrics,
-    endDate: config.endDate,
-    pagePath: config.pagePath,
-    propertyId: config.propertyId,
-    startDate: config.startDate,
-    syncedAt,
-  };
-  const dailyRows = (dailyReport.data.rows ?? []).map((row) => {
+  const buttonClicksByDate = new Map(
+    (buttonClickReport.data.rows ?? []).map((row) => [
+      getDateFromRow(row),
+      eventCountFromRow(row),
+    ]),
+  );
+  const dailyRows: DailyRow[] = (pageReport.data.rows ?? []).map((row) => {
+    const date = getDateFromRow(row);
     const rowMetrics = metricsFromRow(row);
-    const date = formatGaDate(row.dimensionValues?.[0]?.value);
 
-    return [
+    return {
+      ...rowMetrics,
+      buttonClicks: buttonClicksByDate.get(date) ?? 0,
       date,
-      config.pagePath,
-      rowMetrics.screenPageViews,
-      rowMetrics.activeUsers,
-      rowMetrics.sessions,
-      rowMetrics.engagedSessions,
-      config.propertyId,
-      syncedAt,
-    ];
+    };
   });
+  const sheetName = await resolveAnalyticsSheetName(config);
+  const { data: existingData } = await sheets.spreadsheets.values.get({
+    spreadsheetId: config.spreadsheetId,
+    range: sheetRange(sheetName, "A2:D"),
+  });
+  const existingRows =
+    existingData.values
+      ?.map((row) => dailyRowFromSheetRow(row))
+      .filter((row): row is DailyRow => Boolean(row)) ?? [];
+  const mergedRows = mergeDailyRows(existingRows, dailyRows);
+  const syncedAt = new Date().toISOString();
+  const latestDailyRow = getLatestDailyRow(mergedRows);
+  const summary: AnalyticsSummary | null = latestDailyRow
+    ? {
+        activeUsers: latestDailyRow.activeUsers,
+        buttonClicks: latestDailyRow.buttonClicks,
+        date: latestDailyRow.date,
+        pagePath: config.pagePath,
+        screenPageViews: latestDailyRow.screenPageViews,
+        syncedAt,
+      }
+    : null;
 
-  await ensureSheetExists(sheets, config.spreadsheetId, config.summarySheetName);
-  await ensureSheetExists(sheets, config.spreadsheetId, config.dailySheetName);
-  await replaceSheetValues(sheets, config.spreadsheetId, config.summarySheetName, [
-    Array.from(ANALYTICS_SUMMARY_HEADERS),
-    [
-      summary.syncedAt,
-      summary.startDate,
-      summary.endDate,
-      summary.pagePath,
-      summary.screenPageViews,
-      summary.activeUsers,
-      summary.sessions,
-      summary.engagedSessions,
-      summary.propertyId,
-    ],
-  ]);
-  await replaceSheetValues(sheets, config.spreadsheetId, config.dailySheetName, [
-    Array.from(ANALYTICS_DAILY_HEADERS),
-    ...dailyRows,
+  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A:D", [
+    Array.from(ANALYTICS_HEADERS),
+    ...mergedRows.map(sheetValuesFromDailyRow),
   ]);
 
   cachedSummary = {
@@ -254,11 +354,13 @@ export async function getLatestAnalyticsSummary() {
     return null;
   }
 
+  const sheetName = await resolveAnalyticsSheetName(config);
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: sheetRange(config.summarySheetName, "A2:I2"),
+    range: sheetRange(sheetName, "A2:D"),
   });
-  const row = data.values?.[0];
+  const rows = data.values ?? [];
+  const row = rows.at(-1);
 
   if (!row) {
     cachedSummary = {
@@ -269,15 +371,12 @@ export async function getLatestAnalyticsSummary() {
   }
 
   const summary: AnalyticsSummary = {
-    syncedAt: String(row[0] ?? ""),
-    startDate: String(row[1] ?? ""),
-    endDate: String(row[2] ?? ""),
-    pagePath: String(row[3] ?? "/"),
-    screenPageViews: parseNumberCell(row[4]),
-    activeUsers: parseNumberCell(row[5]),
-    sessions: parseNumberCell(row[6]),
-    engagedSessions: parseNumberCell(row[7]),
-    propertyId: String(row[8] ?? ""),
+    date: String(row[0] ?? ""),
+    screenPageViews: parseNumberCell(row[1]),
+    activeUsers: parseNumberCell(row[2]),
+    buttonClicks: parseNumberCell(row[3]),
+    pagePath: config.pagePath,
+    syncedAt: "",
   };
 
   cachedSummary = {
