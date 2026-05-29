@@ -83,7 +83,7 @@ GOOGLE_SHEETS_ANALYTICS_SHEET_NAME=
 ANALYTICS_SYNC_SECRET=long_random_secret
 ```
 
-The sync endpoint writes these columns in the configured analytics sheet tab and updates rows by date:
+The sync endpoint writes these columns from row 3 in the configured analytics sheet tab and updates rows by date:
 
 - A: `날짜`
 - B: `일간 '/' 라우트 뷰 수`

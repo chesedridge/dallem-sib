@@ -353,7 +353,7 @@ export async function syncGaAnalyticsToSheets() {
   const sheetName = await resolveAnalyticsSheetName(config);
   const { data: existingData } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, "A2:D"),
+    range: sheetRange(sheetName, "A3:D"),
     valueRenderOption: "UNFORMATTED_VALUE",
   });
   const existingRows =
@@ -374,7 +374,7 @@ export async function syncGaAnalyticsToSheets() {
       }
     : null;
 
-  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A2:D", "A2", [
+  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A3:D", "A3", [
     ...mergedRows.map(sheetValuesFromDailyRow),
   ]);
 
@@ -404,7 +404,7 @@ export async function getLatestAnalyticsSummary() {
   const sheetName = await resolveAnalyticsSheetName(config);
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, "A2:D"),
+    range: sheetRange(sheetName, "A3:D"),
     valueRenderOption: "UNFORMATTED_VALUE",
   });
   const rows = data.values ?? [];
