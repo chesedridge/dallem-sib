@@ -1,5 +1,4 @@
 import BarriersSection from "@/components/BarriersSection";
-import AnalyticsStats from "@/components/AnalyticsStats";
 import DataSection from "@/components/DataSection";
 import HeroSection from "@/components/HeroSection";
 import MainPageAnalyticsEvents from "@/components/MainPageAnalyticsEvents";
@@ -13,7 +12,6 @@ export default function Home() {
     <main>
       <MainPageAnalyticsEvents />
       <HeroSection />
-      <AnalyticsStats />
       <BarriersSection />
       <DataSection />
 
