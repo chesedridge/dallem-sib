@@ -18,12 +18,12 @@ const ANALYTICS_HEADERS = [
 ] as const;
 
 export type AnalyticsSummary = {
-  activeUsers: number;
   buttonClicks: number;
   date: string;
   pagePath: string;
   screenPageViews: number;
   syncedAt: string;
+  totalUsers: number;
 };
 
 type AnalyticsConfig = {
@@ -38,8 +38,8 @@ type AnalyticsConfig = {
 };
 
 type DailyMetricValues = {
-  activeUsers: number;
   screenPageViews: number;
+  totalUsers: number;
 };
 
 type DailyRow = DailyMetricValues & {
@@ -121,7 +121,7 @@ function metricsFromRow(row?: { metricValues?: Array<{ value?: string | null }> 
 
   return {
     screenPageViews: parseMetricValue(metricValues[0]?.value),
-    activeUsers: parseMetricValue(metricValues[1]?.value),
+    totalUsers: parseMetricValue(metricValues[1]?.value),
   } satisfies DailyMetricValues;
 }
 
@@ -150,15 +150,15 @@ function dailyRowFromSheetRow(row: Array<string | number>) {
   }
 
   return {
-    activeUsers: parseNumberCell(String(row[2] ?? "")),
     buttonClicks: parseNumberCell(String(row[3] ?? "")),
     date,
     screenPageViews: parseNumberCell(String(row[1] ?? "")),
+    totalUsers: parseNumberCell(String(row[2] ?? "")),
   } satisfies DailyRow;
 }
 
 function sheetValuesFromDailyRow(row: DailyRow) {
-  return [row.date, row.screenPageViews, row.activeUsers, row.buttonClicks];
+  return [row.date, row.screenPageViews, row.totalUsers, row.buttonClicks];
 }
 
 function mergeDailyRows(existingRows: DailyRow[], syncedRows: DailyRow[]) {
@@ -271,7 +271,7 @@ export async function syncGaAnalyticsToSheets() {
         dateRanges,
         dimensions: [{ name: "date" }],
         dimensionFilter: createPagePathFilter(config.pagePath),
-        metrics: [{ name: "screenPageViews" }, { name: "activeUsers" }],
+        metrics: [{ name: "screenPageViews" }, { name: "totalUsers" }],
         orderBys,
       },
     }),
@@ -317,12 +317,12 @@ export async function syncGaAnalyticsToSheets() {
   const latestDailyRow = getLatestDailyRow(mergedRows);
   const summary: AnalyticsSummary | null = latestDailyRow
     ? {
-        activeUsers: latestDailyRow.activeUsers,
         buttonClicks: latestDailyRow.buttonClicks,
         date: latestDailyRow.date,
         pagePath: config.pagePath,
         screenPageViews: latestDailyRow.screenPageViews,
         syncedAt,
+        totalUsers: latestDailyRow.totalUsers,
       }
     : null;
 
@@ -373,10 +373,10 @@ export async function getLatestAnalyticsSummary() {
   const summary: AnalyticsSummary = {
     date: String(row[0] ?? ""),
     screenPageViews: parseNumberCell(row[1]),
-    activeUsers: parseNumberCell(row[2]),
     buttonClicks: parseNumberCell(row[3]),
     pagePath: config.pagePath,
     syncedAt: "",
+    totalUsers: parseNumberCell(row[2]),
   };
 
   cachedSummary = {

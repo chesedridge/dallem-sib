@@ -87,7 +87,7 @@ The sync endpoint writes these columns in the configured analytics sheet tab and
 
 - A: `날짜`
 - B: `일간 '/' 라우트 뷰 수`
-- C: `유니크 유저 수`
+- C: `유니크 유저 수` (`totalUsers`)
 - D: `/페이지 내 버튼 클릭수`
 
 When `GOOGLE_SHEETS_ANALYTICS_SHEET_GID` is set, the app resolves the tab name from the sheet gid. The current production gid `1695159350` resolves to `시트6`.

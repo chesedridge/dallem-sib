@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 
 type AnalyticsSummary = {
-  activeUsers: number;
   buttonClicks: number;
   date: string;
   pagePath: string;
   screenPageViews: number;
   syncedAt: string;
+  totalUsers: number;
 };
 
 type AnalyticsSummaryResponse = {
@@ -74,7 +74,7 @@ export default function AnalyticsStats() {
           </div>
           <div>
             <p className="text-[24px] font-extrabold leading-none tracking-[-0.03em] text-text-dark md:text-[32px]">
-              {numberFormatter.format(summary.activeUsers)}
+              {numberFormatter.format(summary.totalUsers)}
             </p>
             <p className="mt-2 text-sm font-semibold text-text-sub">
               유니크 방문자
