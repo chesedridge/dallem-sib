@@ -739,6 +739,10 @@ export function ApplyInfoStep({
               type="checkbox"
               name="privacyConsent"
               checked={info.privacyConsent}
+              aria-invalid={fieldErrors.privacyConsent ? "true" : "false"}
+              aria-describedby={
+                fieldErrors.privacyConsent ? "privacyConsent-error" : undefined
+              }
               onChange={(event) => onPrivacyConsentChange(event.target.checked)}
               className="peer sr-only"
             />
@@ -760,9 +764,17 @@ export function ApplyInfoStep({
               </svg>
             </span>
             <span className="text-sm font-medium text-[var(--color-text-body)] transition-colors peer-checked:text-[var(--color-text-dark)]">
-              개인정보 수집 및 이용에 동의합니다. (선택)
+              개인정보 수집 및 이용에 동의합니다. (필수)
             </span>
           </label>
+          {fieldErrors.privacyConsent ? (
+            <p
+              id="privacyConsent-error"
+              className="mt-3 text-sm font-medium text-[var(--color-primary-strong)]"
+            >
+              {fieldErrors.privacyConsent}
+            </p>
+          ) : null}
         </div>
       </div>
 

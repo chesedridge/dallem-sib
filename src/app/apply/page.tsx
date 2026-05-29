@@ -392,6 +392,11 @@ export default function TestPage() {
         "상담에서 기대하는 도움은 최대 2개까지 선택할 수 있습니다.";
     }
 
+    if (!info.privacyConsent) {
+      nextFieldErrors.privacyConsent =
+        "개인정보 수집 및 이용에 동의해주세요.";
+    }
+
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       return;

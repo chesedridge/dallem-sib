@@ -199,6 +199,10 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     return null;
   }
 
+  if (submission.privacyConsent !== true) {
+    return null;
+  }
+
   if (consultationTopic === "기타" && !consultationTopicDetail) {
     return null;
   }
@@ -275,7 +279,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     supportTopicsDetail,
     hardshipLevel,
     expectedSupport: normalizedExpectedSupport,
-    privacyConsent: Boolean(submission.privacyConsent),
+    privacyConsent: submission.privacyConsent,
     answers,
     totalScore,
     resultTitle,
