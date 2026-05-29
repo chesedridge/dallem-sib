@@ -21,11 +21,6 @@ const STEPS = [
     title: "사후 검사",
     description: "우울증 테스트 진행",
   },
-  {
-    num: "05",
-    title: "선물 증정",
-    description: "4회를 모두 진행하고 우울감이 감소한 분 대상",
-  },
 ];
 
 export default function ProcedureSection() {
@@ -65,7 +60,7 @@ export default function ProcedureSection() {
           <div className="hidden md:block">
             <div className="relative flex">
               {/* Connecting line: from center of first circle to center of last */}
-              <div className="absolute left-[10%] right-[10%] top-[36px] h-[2px] bg-primary/20" />
+              <div className="absolute left-[12.5%] right-[12.5%] top-[36px] h-[2px] bg-primary/20" />
               {STEPS.map((step) => (
                 <div
                   key={step.num}
