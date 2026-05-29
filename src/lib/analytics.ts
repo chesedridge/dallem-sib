@@ -182,6 +182,18 @@ function normalizeDateCell(value: string | number) {
   );
 }
 
+function formatSheetDate(value: string) {
+  const normalizedDate = normalizeDateCell(value);
+
+  if (!normalizedDate) {
+    return value;
+  }
+
+  const [year, month, day] = normalizedDate.split("-").map(Number);
+
+  return `${year}. ${month}. ${day}`;
+}
+
 function parseNumberCell(value?: string) {
   const parsed = Number(String(value ?? 0).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -203,7 +215,12 @@ function dailyRowFromSheetRow(row: Array<string | number>) {
 }
 
 function sheetValuesFromDailyRow(row: DailyRow) {
-  return [row.date, row.screenPageViews, row.totalUsers, row.buttonClicks];
+  return [
+    formatSheetDate(row.date),
+    row.screenPageViews,
+    row.totalUsers,
+    row.buttonClicks,
+  ];
 }
 
 function mergeDailyRows(existingRows: DailyRow[], syncedRows: DailyRow[]) {
@@ -366,7 +383,7 @@ export async function syncGaAnalyticsToSheets() {
   const summary: AnalyticsSummary | null = latestDailyRow
     ? {
         buttonClicks: latestDailyRow.buttonClicks,
-        date: latestDailyRow.date,
+        date: formatSheetDate(latestDailyRow.date),
         pagePath: config.pagePath,
         screenPageViews: latestDailyRow.screenPageViews,
         syncedAt,
@@ -420,7 +437,7 @@ export async function getLatestAnalyticsSummary() {
   }
 
   const summary: AnalyticsSummary = {
-    date: dailyRow.date,
+    date: formatSheetDate(dailyRow.date),
     screenPageViews: dailyRow.screenPageViews,
     buttonClicks: dailyRow.buttonClicks,
     pagePath: config.pagePath,

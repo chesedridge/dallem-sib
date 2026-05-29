@@ -85,7 +85,7 @@ ANALYTICS_SYNC_SECRET=long_random_secret
 
 The sync endpoint writes these columns from row 3 in the configured analytics sheet tab and updates rows by date:
 
-- A: `날짜`
+- A: `날짜` (`yyyy. m. d`)
 - B: `일간 '/' 라우트 뷰 수`
 - C: `유니크 유저 수` (`totalUsers`)
 - D: `/페이지 내 버튼 클릭수`
