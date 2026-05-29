@@ -4,13 +4,14 @@ import {
   getGoogleSheetsConfig,
   getSheetsClient,
   getSpreadsheetSheetTitleById,
-  replaceSheetRangeValues,
   sheetRange,
 } from "@/lib/google";
 
 const MAIN_PAGE_BUTTON_CLICK_EVENT_NAME = "main_page_button_click";
 
+const ANALYTICS_DATA_START_ROW = 3;
 const GOOGLE_SHEETS_DATE_EPOCH_MS = Date.UTC(1899, 11, 30);
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 
 export type AnalyticsSummary = {
@@ -23,14 +24,12 @@ export type AnalyticsSummary = {
 };
 
 type AnalyticsConfig = {
-  endDate: string;
   pagePath: string;
   propertyId: string;
   propertyName: string;
   sheetGid: number | null;
   sheetName: string;
   spreadsheetId: string;
-  startDate: string;
 };
 
 type DailyMetricValues = {
@@ -93,7 +92,6 @@ function getAnalyticsConfig(): AnalyticsConfig | null {
   const normalizedPropertyId = normalizePropertyId(propertyId);
 
   return {
-    endDate: getOptionalEnv(process.env.GA_REPORT_END_DATE) ?? "today",
     pagePath: getOptionalEnv(process.env.GA_PAGE_PATH) ?? "/",
     propertyId: normalizedPropertyId,
     propertyName: `properties/${normalizedPropertyId}`,
@@ -103,7 +101,6 @@ function getAnalyticsConfig(): AnalyticsConfig | null {
       getOptionalEnv(process.env.GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME) ??
       "GA Daily Summary",
     spreadsheetId: sheetsConfig.spreadsheetId,
-    startDate: getOptionalEnv(process.env.GA_REPORT_START_DATE) ?? "30daysAgo",
   };
 }
 
@@ -149,6 +146,24 @@ function formatDateParts(year: number, month: number, day: number) {
     String(month).padStart(2, "0"),
     String(day).padStart(2, "0"),
   ].join("-");
+}
+
+function getKstDateString(dayOffset: number) {
+  const nowInKst = new Date(
+    Date.now() + KST_OFFSET_MS + dayOffset * MILLISECONDS_PER_DAY,
+  );
+
+  return formatDateParts(
+    nowInKst.getUTCFullYear(),
+    nowInKst.getUTCMonth() + 1,
+    nowInKst.getUTCDate(),
+  );
+}
+
+function getKstSyncDates() {
+  return [getKstDateString(-1), getKstDateString(0)].filter(
+    (date): date is string => Boolean(date),
+  );
 }
 
 function normalizeDateCell(value: string | number) {
@@ -223,20 +238,6 @@ function sheetValuesFromDailyRow(row: DailyRow) {
   ];
 }
 
-function mergeDailyRows(existingRows: DailyRow[], syncedRows: DailyRow[]) {
-  const rowsByDate = new Map<string, DailyRow>();
-
-  for (const row of existingRows) {
-    rowsByDate.set(row.date, row);
-  }
-
-  for (const row of syncedRows) {
-    rowsByDate.set(row.date, row);
-  }
-
-  return Array.from(rowsByDate.values());
-}
-
 function getDateFromRow(row: {
   dimensionValues?: Array<{ value?: string | null }>;
 }) {
@@ -245,8 +246,84 @@ function getDateFromRow(row: {
   return normalizeDateCell(dateValue) ?? "";
 }
 
-function getLatestDailyRow(rows: DailyRow[]) {
-  return rows.at(-1) ?? null;
+function createExistingRowsByDate(rows: Array<Array<string | number>>) {
+  const rowsByDate = new Map<string, { row: DailyRow; rowNumber: number }>();
+
+  rows.forEach((sheetRow, index) => {
+    const row = dailyRowFromSheetRow(sheetRow);
+
+    if (!row) {
+      return;
+    }
+
+    rowsByDate.set(row.date, {
+      row,
+      rowNumber: ANALYTICS_DATA_START_ROW + index,
+    });
+  });
+
+  return rowsByDate;
+}
+
+function createMetricsByDate(
+  rows: Array<{
+    dimensionValues?: Array<{ value?: string | null }>;
+    metricValues?: Array<{ value?: string | null }>;
+  }>,
+) {
+  const metricsByDate = new Map<string, DailyMetricValues>();
+
+  rows.forEach((row) => {
+    const date = getDateFromRow(row);
+
+    if (!date) {
+      return;
+    }
+
+    metricsByDate.set(date, metricsFromRow(row));
+  });
+
+  return metricsByDate;
+}
+
+function createButtonClicksByDate(
+  rows: Array<{
+    dimensionValues?: Array<{ value?: string | null }>;
+    metricValues?: Array<{ value?: string | null }>;
+  }>,
+) {
+  const buttonClicksByDate = new Map<string, number>();
+
+  rows.forEach((row) => {
+    const date = getDateFromRow(row);
+
+    if (!date) {
+      return;
+    }
+
+    buttonClicksByDate.set(date, eventCountFromRow(row));
+  });
+
+  return buttonClicksByDate;
+}
+
+function analyticsSummaryFromDailyRow(
+  row: DailyRow | null,
+  pagePath: string,
+  syncedAt: string,
+): AnalyticsSummary | null {
+  if (!row) {
+    return null;
+  }
+
+  return {
+    buttonClicks: row.buttonClicks,
+    date: formatSheetDate(row.date),
+    pagePath,
+    screenPageViews: row.screenPageViews,
+    syncedAt,
+    totalUsers: row.totalUsers,
+  };
 }
 
 async function resolveAnalyticsSheetName(config: AnalyticsConfig) {
@@ -314,10 +391,21 @@ export async function syncGaAnalyticsToSheets() {
     return null;
   }
 
+  const syncDates = getKstSyncDates();
+
+  if (syncDates.length === 0) {
+    return {
+      appendedRowCount: 0,
+      dailyRowCount: 0,
+      summary: null,
+      updatedRowCount: 0,
+    };
+  }
+
   const dateRanges = [
     {
-      startDate: config.startDate,
-      endDate: config.endDate,
+      startDate: syncDates[0],
+      endDate: syncDates.at(-1) ?? syncDates[0],
     },
   ];
   const orderBys = [
@@ -351,15 +439,15 @@ export async function syncGaAnalyticsToSheets() {
     }),
   ]);
 
-  const buttonClicksByDate = new Map(
-    (buttonClickReport.data.rows ?? []).map((row) => [
-      getDateFromRow(row),
-      eventCountFromRow(row),
-    ]),
+  const metricsByDate = createMetricsByDate(pageReport.data.rows ?? []);
+  const buttonClicksByDate = createButtonClicksByDate(
+    buttonClickReport.data.rows ?? [],
   );
-  const dailyRows: DailyRow[] = (pageReport.data.rows ?? []).map((row) => {
-    const date = getDateFromRow(row);
-    const rowMetrics = metricsFromRow(row);
+  const dailyRows: DailyRow[] = syncDates.map((date) => {
+    const rowMetrics = metricsByDate.get(date) ?? {
+      screenPageViews: 0,
+      totalUsers: 0,
+    };
 
     return {
       ...rowMetrics,
@@ -370,30 +458,63 @@ export async function syncGaAnalyticsToSheets() {
   const sheetName = await resolveAnalyticsSheetName(config);
   const { data: existingData } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, "A3:D"),
+    range: sheetRange(sheetName, `A${ANALYTICS_DATA_START_ROW}:D`),
     valueRenderOption: "UNFORMATTED_VALUE",
   });
-  const existingRows =
-    existingData.values
-      ?.map((row) => dailyRowFromSheetRow(row))
-      .filter((row): row is DailyRow => Boolean(row)) ?? [];
-  const mergedRows = mergeDailyRows(existingRows, dailyRows);
-  const syncedAt = new Date().toISOString();
-  const latestDailyRow = getLatestDailyRow(mergedRows);
-  const summary: AnalyticsSummary | null = latestDailyRow
-    ? {
-        buttonClicks: latestDailyRow.buttonClicks,
-        date: formatSheetDate(latestDailyRow.date),
-        pagePath: config.pagePath,
-        screenPageViews: latestDailyRow.screenPageViews,
-        syncedAt,
-        totalUsers: latestDailyRow.totalUsers,
-      }
-    : null;
+  const existingRows = (existingData.values ?? []) as Array<
+    Array<string | number>
+  >;
+  const existingRowsByDate = createExistingRowsByDate(existingRows);
+  const rowsToUpdate: Array<{ row: DailyRow; rowNumber: number }> = [];
+  const rowsToAppend: DailyRow[] = [];
 
-  await replaceSheetRangeValues(sheets, config.spreadsheetId, sheetName, "A3:D", "A3", [
-    ...mergedRows.map(sheetValuesFromDailyRow),
-  ]);
+  dailyRows.forEach((row) => {
+    const existingRow = existingRowsByDate.get(row.date);
+
+    if (existingRow) {
+      rowsToUpdate.push({
+        row,
+        rowNumber: existingRow.rowNumber,
+      });
+      return;
+    }
+
+    rowsToAppend.push(row);
+  });
+
+  if (rowsToUpdate.length > 0) {
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: config.spreadsheetId,
+      requestBody: {
+        data: rowsToUpdate.map(({ row, rowNumber }) => ({
+          range: sheetRange(sheetName, `A${rowNumber}:D${rowNumber}`),
+          values: [sheetValuesFromDailyRow(row)],
+        })),
+        valueInputOption: "RAW",
+      },
+    });
+  }
+
+  if (rowsToAppend.length > 0) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId: config.spreadsheetId,
+      range: sheetRange(
+        sheetName,
+        `A${ANALYTICS_DATA_START_ROW + existingRows.length}`,
+      ),
+      valueInputOption: "RAW",
+      requestBody: {
+        values: rowsToAppend.map(sheetValuesFromDailyRow),
+      },
+    });
+  }
+
+  const syncedAt = new Date().toISOString();
+  const summary = analyticsSummaryFromDailyRow(
+    dailyRows.at(-1) ?? null,
+    config.pagePath,
+    syncedAt,
+  );
 
   cachedSummary = {
     expiresAt: Date.now() + 5 * 60 * 1000,
@@ -401,8 +522,10 @@ export async function syncGaAnalyticsToSheets() {
   };
 
   return {
+    appendedRowCount: rowsToAppend.length,
     dailyRowCount: dailyRows.length,
     summary,
+    updatedRowCount: rowsToUpdate.length,
   };
 }
 
@@ -421,12 +544,17 @@ export async function getLatestAnalyticsSummary() {
   const sheetName = await resolveAnalyticsSheetName(config);
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, "A3:D"),
+    range: sheetRange(sheetName, `A${ANALYTICS_DATA_START_ROW}:D`),
     valueRenderOption: "UNFORMATTED_VALUE",
   });
-  const rows = data.values ?? [];
-  const row = rows.at(-1);
-  const dailyRow = row ? dailyRowFromSheetRow(row) : null;
+  const rows = (data.values ?? []) as Array<Array<string | number>>;
+  const rowsByDate = createExistingRowsByDate(rows);
+  const dailyRow =
+    [...getKstSyncDates()]
+      .reverse()
+      .map((date) => rowsByDate.get(date)?.row)
+      .find((row): row is DailyRow => Boolean(row)) ??
+    (rows.at(-1) ? dailyRowFromSheetRow(rows.at(-1) ?? []) : null);
 
   if (!dailyRow) {
     cachedSummary = {

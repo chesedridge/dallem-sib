@@ -58,8 +58,10 @@ async function handleSync(request: Request) {
 
     return NextResponse.json({
       ok: true,
+      appendedRowCount: result.appendedRowCount,
       dailyRowCount: result.dailyRowCount,
       summary: result.summary,
+      updatedRowCount: result.updatedRowCount,
     });
   } catch (error) {
     const { status, message } = getGoogleApiErrorDetails(error);

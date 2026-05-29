@@ -9,14 +9,6 @@ env:
     value: "527817023"
     availability:
       - RUNTIME
-  - variable: GA_REPORT_START_DATE
-    value: 30daysAgo
-    availability:
-      - RUNTIME
-  - variable: GA_REPORT_END_DATE
-    value: today
-    availability:
-      - RUNTIME
   - variable: GA_PAGE_PATH
     value: /
     availability:

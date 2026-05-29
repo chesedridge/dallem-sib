@@ -75,15 +75,13 @@ The main page can show recent GA4 traffic metrics. GA collects page views in the
 
 ```bash
 GA_PROPERTY_ID=527817023
-GA_REPORT_START_DATE=30daysAgo
-GA_REPORT_END_DATE=today
 GA_PAGE_PATH=/
 GOOGLE_SHEETS_ANALYTICS_SHEET_GID=1695159350
 GOOGLE_SHEETS_ANALYTICS_SHEET_NAME=
 ANALYTICS_SYNC_SECRET=long_random_secret
 ```
 
-The sync endpoint writes these columns from row 3 in the configured analytics sheet tab and updates rows by date:
+The sync endpoint writes these columns from row 3 in the configured analytics sheet tab. Each hourly run uses KST dates and updates only yesterday's row and today's row by matching column A. If either date does not exist yet, the endpoint appends that row after the existing data:
 
 - A: `날짜` (`yyyy. m. d`)
 - B: `일간 '/' 라우트 뷰 수`

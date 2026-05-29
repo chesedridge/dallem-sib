@@ -244,26 +244,3 @@ export async function replaceSheetValues(
     },
   });
 }
-
-export async function replaceSheetRangeValues(
-  sheets: SheetsClient,
-  spreadsheetId: string,
-  sheetName: string,
-  clearRange: string,
-  updateStartCell: string,
-  values: Array<Array<string | number>>,
-) {
-  await sheets.spreadsheets.values.clear({
-    spreadsheetId,
-    range: sheetRange(sheetName, clearRange),
-  });
-
-  await sheets.spreadsheets.values.update({
-    spreadsheetId,
-    range: sheetRange(sheetName, updateStartCell),
-    valueInputOption: "RAW",
-    requestBody: {
-      values,
-    },
-  });
-}
