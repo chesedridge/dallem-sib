@@ -17,6 +17,9 @@ const ANALYTICS_HEADERS = [
   "/페이지 내 버튼 클릭수",
 ] as const;
 
+const GOOGLE_SHEETS_DATE_EPOCH_MS = Date.UTC(1899, 11, 30);
+const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+
 export type AnalyticsSummary = {
   buttonClicks: number;
   date: string;
@@ -137,13 +140,62 @@ function formatGaDate(value?: string | null) {
   return `${value.slice(0, 4)}-${value.slice(4, 6)}-${value.slice(6)}`;
 }
 
+function formatDateParts(year: number, month: number, day: number) {
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return [
+    String(year).padStart(4, "0"),
+    String(month).padStart(2, "0"),
+    String(day).padStart(2, "0"),
+  ].join("-");
+}
+
+function normalizeDateCell(value: string | number) {
+  if (typeof value === "number") {
+    const date = new Date(
+      GOOGLE_SHEETS_DATE_EPOCH_MS + Math.round(value) * MILLISECONDS_PER_DAY,
+    );
+
+    return formatDateParts(
+      date.getUTCFullYear(),
+      date.getUTCMonth() + 1,
+      date.getUTCDate(),
+    );
+  }
+
+  const dateText = value.trim();
+  const compactDateMatch = dateText.match(/^(\d{4})(\d{2})(\d{2})$/);
+  const delimitedDateMatch = dateText.match(
+    /^(\d{4})[./-]\s*(\d{1,2})[./-]\s*(\d{1,2})\.?$/,
+  );
+  const dateMatch = compactDateMatch ?? delimitedDateMatch;
+
+  if (!dateMatch) {
+    return dateText || null;
+  }
+
+  return formatDateParts(
+    Number(dateMatch[1]),
+    Number(dateMatch[2]),
+    Number(dateMatch[3]),
+  );
+}
+
 function parseNumberCell(value?: string) {
   const parsed = Number(String(value ?? 0).replace(/,/g, ""));
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function dailyRowFromSheetRow(row: Array<string | number>) {
-  const date = String(row[0] ?? "").trim();
+  const date = normalizeDateCell(row[0] ?? "");
 
   if (!date) {
     return null;
@@ -178,7 +230,9 @@ function mergeDailyRows(existingRows: DailyRow[], syncedRows: DailyRow[]) {
 function getDateFromRow(row: {
   dimensionValues?: Array<{ value?: string | null }>;
 }) {
-  return formatGaDate(row.dimensionValues?.[0]?.value);
+  const dateValue = formatGaDate(row.dimensionValues?.[0]?.value);
+
+  return normalizeDateCell(dateValue) ?? "";
 }
 
 function getLatestDailyRow(rows: DailyRow[]) {
@@ -307,6 +361,7 @@ export async function syncGaAnalyticsToSheets() {
   const { data: existingData } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
     range: sheetRange(sheetName, "A2:D"),
+    valueRenderOption: "UNFORMATTED_VALUE",
   });
   const existingRows =
     existingData.values
@@ -358,11 +413,13 @@ export async function getLatestAnalyticsSummary() {
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId: config.spreadsheetId,
     range: sheetRange(sheetName, "A2:D"),
+    valueRenderOption: "UNFORMATTED_VALUE",
   });
   const rows = data.values ?? [];
   const row = rows.at(-1);
+  const dailyRow = row ? dailyRowFromSheetRow(row) : null;
 
-  if (!row) {
+  if (!dailyRow) {
     cachedSummary = {
       expiresAt: Date.now() + 60 * 1000,
       value: null,
@@ -371,12 +428,12 @@ export async function getLatestAnalyticsSummary() {
   }
 
   const summary: AnalyticsSummary = {
-    date: String(row[0] ?? ""),
-    screenPageViews: parseNumberCell(row[1]),
-    buttonClicks: parseNumberCell(row[3]),
+    date: dailyRow.date,
+    screenPageViews: dailyRow.screenPageViews,
+    buttonClicks: dailyRow.buttonClicks,
     pagePath: config.pagePath,
     syncedAt: "",
-    totalUsers: parseNumberCell(row[2]),
+    totalUsers: dailyRow.totalUsers,
   };
 
   cachedSummary = {
