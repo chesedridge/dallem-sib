@@ -1,5 +1,13 @@
-import { google } from "googleapis";
 import { NextResponse } from "next/server";
+
+import {
+  getGoogleApiErrorDetails,
+  getGoogleSheetsConfig,
+  getSheetsClient,
+  getSpreadsheetSheetTitles,
+  sheetRange,
+  type SheetsClient,
+} from "@/lib/google";
 
 export const runtime = "nodejs";
 
@@ -50,120 +58,6 @@ type SurveySubmission = {
   resultTitle: string;
   resultDescription: string;
 };
-
-type GoogleServiceAccountJson = {
-  client_email?: string;
-  private_key?: string;
-};
-
-type GoogleApiError = {
-  code?: number | string;
-  status?: number;
-  message?: string;
-  response?: {
-    status?: number;
-    data?: {
-      error?: {
-        code?: number;
-        message?: string;
-        status?: string;
-      };
-    };
-  };
-  errors?: Array<{
-    message?: string;
-    reason?: string;
-  }>;
-};
-
-function sheetRange(sheetName: string, range: string) {
-  const escapedSheetName = sheetName.replace(/'/g, "''");
-  return `'${escapedSheetName}'!${range}`;
-}
-
-function normalizePrivateKey(privateKey?: string) {
-  if (!privateKey) {
-    return null;
-  }
-
-  const trimmedKey = privateKey.trim();
-  const withoutWrappingQuotes =
-    (trimmedKey.startsWith('"') && trimmedKey.endsWith('"')) ||
-    (trimmedKey.startsWith("'") && trimmedKey.endsWith("'"))
-      ? trimmedKey.slice(1, -1)
-      : trimmedKey;
-
-  return withoutWrappingQuotes.replace(/\\n/g, "\n").replace(/\r\n/g, "\n");
-}
-
-function parseServiceAccountJson(rawValue?: string): GoogleServiceAccountJson | null {
-  if (!rawValue) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(rawValue) as GoogleServiceAccountJson;
-  } catch {
-    return null;
-  }
-}
-
-function getGoogleApiErrorDetails(error: unknown) {
-  const googleApiError = error as GoogleApiError;
-  const status =
-    googleApiError.response?.status ??
-    googleApiError.status ??
-    (typeof googleApiError.code === "number" ? googleApiError.code : undefined);
-  const message =
-    googleApiError.response?.data?.error?.message ??
-    googleApiError.errors?.[0]?.message ??
-    googleApiError.message ??
-    "Unknown error";
-
-  return { status, message };
-}
-
-async function getSpreadsheetSheetTitles(
-  sheets: ReturnType<typeof google.sheets>,
-  spreadsheetId: string,
-) {
-  const { data } = await sheets.spreadsheets.get({
-    spreadsheetId,
-    fields: "sheets.properties.title",
-  });
-
-  return data.sheets
-    ?.map((sheet) => sheet.properties?.title)
-    .filter((title): title is string => Boolean(title)) ?? [];
-}
-
-function getGoogleSheetsConfig() {
-  const serviceAccountJsonBase64 = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64;
-  const decodedServiceAccountJson = serviceAccountJsonBase64
-    ? Buffer.from(serviceAccountJsonBase64, "base64").toString("utf8")
-    : undefined;
-  const serviceAccountJson =
-    parseServiceAccountJson(decodedServiceAccountJson) ??
-    parseServiceAccountJson(process.env.GOOGLE_SERVICE_ACCOUNT_JSON);
-  const serviceAccountEmail =
-    serviceAccountJson?.client_email ?? process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = normalizePrivateKey(
-    serviceAccountJson?.private_key ?? process.env.GOOGLE_PRIVATE_KEY,
-  );
-  const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-  const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME ?? "Sheet1";
-
-  if (!serviceAccountEmail || !privateKey || !spreadsheetId) {
-    return null;
-  }
-
-  return {
-    serviceAccountEmail,
-    privateKey,
-    spreadsheetId,
-    sheetName,
-  };
-}
 
 function validateSubmission(payload: unknown): SurveySubmission | null {
   if (!payload || typeof payload !== "object") {
@@ -288,7 +182,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 }
 
 async function ensureHeaderRow(
-  sheets: ReturnType<typeof google.sheets>,
+  sheets: SheetsClient,
   spreadsheetId: string,
   sheetName: string,
 ) {
@@ -342,13 +236,18 @@ export async function POST(request: Request) {
   }
 
   try {
-    const auth = new google.auth.JWT({
-      email: config.serviceAccountEmail,
-      key: config.privateKey,
-      scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-    });
-    const sheets = google.sheets({ version: "v4", auth });
+    const sheets = getSheetsClient();
     let sheetTitles: string[];
+
+    if (!sheets) {
+      return NextResponse.json(
+        {
+          message:
+            "Google Sheets 설정이 비어 있습니다. 환경변수를 먼저 설정해주세요.",
+        },
+        { status: 500 },
+      );
+    }
 
     try {
       sheetTitles = await getSpreadsheetSheetTitles(sheets, config.spreadsheetId);

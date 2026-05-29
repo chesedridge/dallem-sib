@@ -60,6 +60,58 @@ The API writes these columns automatically:
 
 If the target sheet is empty, the header row is created automatically on row 3, and data starts from row 4.
 
+## GA4 Analytics Sync
+
+The main page can show recent GA4 traffic metrics. GA collects page views in the browser, and `GET` or `POST /api/analytics/sync-ga` syncs GA4 aggregate data into Google Sheets.
+
+### 1. Configure GA4
+
+1. Use the Firebase-linked GA4 property `527817023`.
+2. Set `NEXT_PUBLIC_GA_MEASUREMENT_ID` to the Firebase web stream measurement ID `G-K7092CYHWZ`.
+3. Enable the Google Analytics Data API in the same Google Cloud project used by the service account.
+4. Add the service account email as a GA property viewer.
+
+### 2. Configure sync environment variables
+
+```bash
+GA_PROPERTY_ID=527817023
+GA_REPORT_START_DATE=30daysAgo
+GA_REPORT_END_DATE=today
+GA_PAGE_PATH=/
+GOOGLE_SHEETS_ANALYTICS_SUMMARY_SHEET_NAME=GA Latest Summary
+GOOGLE_SHEETS_ANALYTICS_DAILY_SHEET_NAME=GA Daily Summary
+ANALYTICS_SYNC_SECRET=long_random_secret
+```
+
+The sync endpoint creates or replaces two sheet tabs:
+
+- `GA Latest Summary`: one row for the current reporting period, used by the main page display.
+- `GA Daily Summary`: daily rows for inspection and manual reporting.
+
+### 3. Trigger the sync
+
+Call the endpoint from Cloud Scheduler after deployment:
+
+```bash
+curl -X POST \
+  -H "x-analytics-sync-secret: $ANALYTICS_SYNC_SECRET" \
+  https://your-domain.example/api/analytics/sync-ga
+```
+
+Example Cloud Scheduler job:
+
+```bash
+gcloud scheduler jobs create http sync-ga-to-sheets \
+  --location=asia-east1 \
+  --schedule="0 * * * *" \
+  --time-zone="Asia/Seoul" \
+  --uri="https://dallem-sib--dallem-sib.asia-east1.hosted.app/api/analytics/sync-ga" \
+  --http-method=POST \
+  --headers="x-analytics-sync-secret=$ANALYTICS_SYNC_SECRET"
+```
+
+Hourly is enough for "today so far" style reporting. Daily is enough if the main page should only show completed daily totals.
+
 ## Scripts
 
 - `npm run dev`

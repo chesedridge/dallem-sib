@@ -1,4 +1,5 @@
 import BarriersSection from "@/components/BarriersSection";
+import AnalyticsStats from "@/components/AnalyticsStats";
 import DataSection from "@/components/DataSection";
 import HeroSection from "@/components/HeroSection";
 
@@ -10,6 +11,7 @@ export default function Home() {
   return (
     <main>
       <HeroSection />
+      <AnalyticsStats />
       <BarriersSection />
       <DataSection />
 
