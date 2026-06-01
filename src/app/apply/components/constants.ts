@@ -26,7 +26,7 @@ export const INFO_FIELDS: InfoField[] = [
   },
   {
     key: "residence",
-    label: "거주지",
+    label: "거주지 또는 근무지",
     type: "select",
     options: [
       "가평군",
