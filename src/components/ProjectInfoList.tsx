@@ -26,7 +26,7 @@ const INFO_ITEMS = [
   },
   {
     label: "참여 기간",
-    value: "2026년 12월 31일 까지",
+    value: "2027년 5월 31일까지",
   },
   {
     label: "참여 방법",
