@@ -1,4 +1,12 @@
 # Firebase App Hosting environment configuration.
+runConfig:
+  vpcAccess:
+    # 알리고 API의 IP 인증을 통과하기 위해 모든 외부 트래픽을
+    # Cloud NAT(dallem-sib-nat)의 고정 IP 34.81.89.11로 내보낸다.
+    egress: ALL_TRAFFIC
+    networkInterfaces:
+      - network: default
+        subnetwork: default
 env:
   - variable: NEXT_PUBLIC_GA_MEASUREMENT_ID
     value: G-K7092CYHWZ
