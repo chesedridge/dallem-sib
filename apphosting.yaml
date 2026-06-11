@@ -21,3 +21,15 @@ env:
     secret: ANALYTICS_SYNC_SECRET
     availability:
       - RUNTIME
+  - variable: ALIGO_API_KEY
+    secret: ALIGO_API_KEY
+    availability:
+      - RUNTIME
+  - variable: ALIGO_USER_ID
+    secret: ALIGO_USER_ID
+    availability:
+      - RUNTIME
+  - variable: ALIGO_SENDER
+    secret: ALIGO_SENDER
+    availability:
+      - RUNTIME

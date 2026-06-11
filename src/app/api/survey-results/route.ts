@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
 import {
+  buildSurveyConfirmationSms,
+  getAligoConfig,
+  maskPhoneNumber,
+  sendAligoSms,
+} from "@/lib/aligo";
+import {
   getGoogleApiErrorDetails,
   getGoogleSheetsConfig,
   getSheetsClient,
@@ -181,6 +187,70 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   };
 }
 
+const SMS_HIGHLIGHT_SHEET_ID = 1525438762;
+const SMS_HIGHLIGHT_SHEET_NAME = "상담진행관리";
+const NICKNAME_COLUMN_INDEX = 2;
+const CONTACT_COLUMN = "D";
+
+async function highlightSmsSentRow(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  contact: string,
+) {
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: sheetRange(
+      SMS_HIGHLIGHT_SHEET_NAME,
+      `${CONTACT_COLUMN}:${CONTACT_COLUMN}`,
+    ),
+  });
+
+  const contactCells = data.values ?? [];
+  const normalizedContact = contact.replace(/\D/g, "");
+  let highlightRowNumber = -1;
+
+  // 같은 연락처로 여러 번 신청했을 수 있으므로 가장 최근(아래) 행을 찾는다.
+  for (let index = contactCells.length - 1; index >= 0; index -= 1) {
+    const cellValue = String(contactCells[index]?.[0] ?? "").replace(/\D/g, "");
+
+    if (cellValue && cellValue === normalizedContact) {
+      highlightRowNumber = index + 1;
+      break;
+    }
+  }
+
+  if (highlightRowNumber < 2) {
+    throw new Error(
+      `${SMS_HIGHLIGHT_SHEET_NAME} 탭에서 연락처를 찾을 수 없습니다. (receiver: ${maskPhoneNumber(contact)})`,
+    );
+  }
+
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      requests: [
+        {
+          repeatCell: {
+            range: {
+              sheetId: SMS_HIGHLIGHT_SHEET_ID,
+              startRowIndex: highlightRowNumber - 1,
+              endRowIndex: highlightRowNumber,
+              startColumnIndex: NICKNAME_COLUMN_INDEX,
+              endColumnIndex: NICKNAME_COLUMN_INDEX + 1,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: { red: 1, green: 1, blue: 0 },
+              },
+            },
+            fields: "userEnteredFormat.backgroundColor",
+          },
+        },
+      ],
+    },
+  });
+}
+
 async function ensureHeaderRow(
   sheets: SheetsClient,
   spreadsheetId: string,
@@ -317,6 +387,38 @@ export async function POST(request: Request) {
         ],
       },
     });
+
+    // 문자 발송 실패가 신청 접수 자체를 막으면 안 되므로 오류는 기록만 한다.
+    if (getAligoConfig()) {
+      let smsSent = false;
+
+      try {
+        await sendAligoSms(
+          payload.contact,
+          buildSurveyConfirmationSms(payload.nickname),
+        );
+        smsSent = true;
+      } catch (error) {
+        console.error("Failed to send Aligo SMS", {
+          receiver: maskPhoneNumber(payload.contact),
+          message: error instanceof Error ? error.message : String(error),
+        });
+      }
+
+      if (smsSent) {
+        try {
+          await highlightSmsSentRow(sheets, config.spreadsheetId, payload.contact);
+        } catch (error) {
+          console.error("Failed to highlight SMS-sent row", {
+            message: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
+    } else {
+      console.warn(
+        "Aligo SMS skipped: ALIGO_API_KEY, ALIGO_USER_ID, ALIGO_SENDER 미설정",
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
