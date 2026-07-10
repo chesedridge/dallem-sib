@@ -15,6 +15,12 @@ import type {
   RespondentInfoErrors,
   RespondentTextFieldKey,
 } from "./types";
+import {
+  getKoreaDateString,
+  PREFERRED_SCHEDULE_LIMIT,
+  PREFERRED_SCHEDULE_MAX_DATE,
+  type PreferredSchedule,
+} from "@/lib/preferred-schedule";
 
 type ApplyInfoStepProps = {
   fieldErrors: RespondentInfoErrors;
@@ -23,6 +29,11 @@ type ApplyInfoStepProps = {
   onPrivacyConsentChange: (checked: boolean) => void;
   onToggleSupportTopic: (topic: string) => void;
   onUpdateField: (key: RespondentTextFieldKey, value: string) => void;
+  onUpdatePreferredSchedule: (
+    index: number,
+    field: keyof PreferredSchedule,
+    value: string,
+  ) => void;
   submitError: string;
 };
 
@@ -333,10 +344,34 @@ export function ApplyInfoStep({
   onPrivacyConsentChange,
   onToggleSupportTopic,
   onUpdateField,
+  onUpdatePreferredSchedule,
   submitError,
 }: ApplyInfoStepProps) {
   const formatTopicLabel = (option: string) =>
     option === "기타" ? "기타(직접 입력)" : option;
+  const [visibleScheduleCount, setVisibleScheduleCount] = useState(1);
+  const today = getKoreaDateString();
+  const preferredSchedules = Array.from(
+    { length: PREFERRED_SCHEDULE_LIMIT },
+    (_, index) => info.preferredSchedules[index] ?? { date: "", time: "" },
+  );
+  useEffect(() => {
+    const lastFilledScheduleCount = info.preferredSchedules.reduce(
+      (lastCount, schedule, index) =>
+        schedule.date || schedule.time ? index + 1 : lastCount,
+      0,
+    );
+
+    if (lastFilledScheduleCount > 0) {
+      setVisibleScheduleCount((count) =>
+        Math.max(count, lastFilledScheduleCount),
+      );
+    }
+  }, [info.preferredSchedules]);
+  const visiblePreferredSchedules = preferredSchedules.slice(
+    0,
+    visibleScheduleCount,
+  );
 
   return (
     <section className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
@@ -404,6 +439,7 @@ export function ApplyInfoStep({
                   inputMode={field.inputMode}
                   maxLength={field.maxLength}
                   pattern={field.pattern}
+                  max={field.key === "birthDate" ? today : field.max}
                   aria-invalid={fieldError ? "true" : "false"}
                   aria-describedby={
                     fieldError ? `info-${field.key}-error` : undefined
@@ -479,6 +515,111 @@ export function ApplyInfoStep({
           {fieldErrors.consultationMethod ? (
             <p className="text-sm font-medium text-[var(--color-primary-strong)]">
               {fieldErrors.consultationMethod}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="mx-auto max-w-[36rem] space-y-3.5 text-left">
+          <div>
+            <p className="text-[15px] font-semibold text-[var(--color-text-body)] md:text-[17px]">
+              희망 일정
+            </p>
+            <p className="mt-1 text-sm leading-6 text-[var(--color-text-sub)]">
+              날짜와 시간을 최대 3개까지 선택해주세요. 희망 일정 1은 필수입니다.
+            </p>
+          </div>
+          <div className="space-y-3">
+            {visiblePreferredSchedules.map((schedule, index) => (
+              <div
+                key={index}
+                className={`rounded-[20px] border p-4 ${
+                  fieldErrors.preferredSchedules
+                    ? "border-[var(--color-primary)] bg-primary-soft"
+                    : "border-[var(--color-border-soft)] bg-bg-gray"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-[var(--color-text-body)]">
+                    희망 일정 {index + 1}
+                  </p>
+                  <span className="rounded-full bg-bg-white px-2.5 py-1 text-xs font-medium text-[var(--color-text-sub)]">
+                    {index === 0 ? "필수" : "선택"}
+                  </span>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1.5">
+                    <span className="block text-sm font-medium text-[var(--color-text-body)]">
+                      날짜
+                    </span>
+                    <input
+                      type="date"
+                      name={`preferredScheduleDate-${index + 1}`}
+                      value={schedule.date}
+                      min={today}
+                      max={PREFERRED_SCHEDULE_MAX_DATE}
+                      aria-invalid={
+                        fieldErrors.preferredSchedules ? "true" : "false"
+                      }
+                      aria-describedby={
+                        fieldErrors.preferredSchedules
+                          ? "preferredSchedules-error"
+                          : undefined
+                      }
+                      onChange={(event) =>
+                        onUpdatePreferredSchedule(index, "date", event.target.value)
+                      }
+                      className="h-14 w-full rounded-[18px] border border-transparent bg-bg-white px-4 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
+                    />
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="block text-sm font-medium text-[var(--color-text-body)]">
+                      시간
+                    </span>
+                    <input
+                      type="time"
+                      name={`preferredScheduleTime-${index + 1}`}
+                      value={schedule.time}
+                      aria-invalid={
+                        fieldErrors.preferredSchedules ? "true" : "false"
+                      }
+                      aria-describedby={
+                        fieldErrors.preferredSchedules
+                          ? "preferredSchedules-error"
+                          : undefined
+                      }
+                      onChange={(event) =>
+                        onUpdatePreferredSchedule(index, "time", event.target.value)
+                      }
+                      className="h-14 w-full rounded-[18px] border border-transparent bg-bg-white px-4 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
+                    />
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+          {visibleScheduleCount < PREFERRED_SCHEDULE_LIMIT ? (
+            <button
+              type="button"
+              onClick={() =>
+                setVisibleScheduleCount((count) =>
+                  Math.min(count + 1, PREFERRED_SCHEDULE_LIMIT),
+                )
+              }
+              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[18px] border border-[var(--color-border-strong)] bg-bg-white px-4 py-3 text-sm font-semibold text-[var(--color-text-body)] transition-transform active:scale-[0.96]"
+            >
+              <span aria-hidden="true">+</span>
+              희망 일정 추가
+              <span className="text-[var(--color-text-sub)]">
+                ({visibleScheduleCount}/{PREFERRED_SCHEDULE_LIMIT})
+              </span>
+            </button>
+          ) : null}
+          {fieldErrors.preferredSchedules ? (
+            <p
+              id="preferredSchedules-error"
+              className="text-sm font-medium text-[var(--color-primary-strong)]"
+            >
+              {fieldErrors.preferredSchedules}
             </p>
           ) : null}
         </div>
@@ -730,7 +871,7 @@ export function ApplyInfoStep({
             <p className="mt-2">2. 수집 항목</p>
             <p>
               닉네임(또는 이름), 생년월일, 휴대폰 번호, 거주지 또는 근무지,
-              상담방법, 상담주제, 현재 힘든 정도, 상담 기대사항
+              상담방법, 희망 일정(날짜·시간), 상담주제, 현재 힘든 정도, 상담 기대사항
             </p>
             <p className="mt-2">3. 보유 및 이용 기간</p>
             <p>

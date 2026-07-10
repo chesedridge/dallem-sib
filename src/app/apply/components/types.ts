@@ -12,6 +12,7 @@ export type ResultBand = {
 
 export type RespondentInfo = {
   nickname: string;
+  birthDate: string;
   contact: string;
   residence: string;
   consultationMethod: string;
@@ -21,6 +22,7 @@ export type RespondentInfo = {
   supportTopicsDetail: string;
   hardshipLevel: string;
   expectedSupport: string[];
+  preferredSchedules: PreferredSchedule[];
   privacyConsent: boolean;
 };
 
@@ -35,13 +37,14 @@ export type RespondentInfoErrors = Partial<
 export type InfoField = {
   key: RespondentTextFieldKey;
   label: string;
-  type: "text" | "tel" | "select";
+  type: "text" | "tel" | "date" | "select";
   options?: string[];
   placeholder?: string;
   autoComplete?: string;
   inputMode?: "text" | "tel" | "numeric";
   maxLength?: number;
   pattern?: string;
+  max?: string;
 };
 
 export type FormStep =
@@ -52,3 +55,4 @@ export type FormStep =
   | "result"
   | "submitted"
   | "ineligible";
+import type { PreferredSchedule } from "@/lib/preferred-schedule";

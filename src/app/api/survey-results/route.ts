@@ -14,6 +14,13 @@ import {
   sheetRange,
   type SheetsClient,
 } from "@/lib/google";
+import {
+  isValidBirthDate,
+  isValidPreferredScheduleDate,
+  isValidPreferredScheduleTime,
+  PREFERRED_SCHEDULE_LIMIT,
+  type PreferredSchedule,
+} from "@/lib/preferred-schedule";
 
 export const runtime = "nodejs";
 
@@ -21,6 +28,7 @@ const PHONE_PATTERN = /^010\d{7,8}$/;
 const ANSWER_COUNT = 9;
 const HEADER_ROW = 3;
 const FIRST_DATA_ROW = HEADER_ROW + 1;
+const SHEET_LAST_COLUMN = "AD";
 const SHEET_HEADERS = [
   "접수일",
   "개인정보수집동의",
@@ -45,10 +53,18 @@ const SHEET_HEADERS = [
   "문항9",
   "총점",
   "위험단계",
+  "생년월일",
+  "희망일정1 날짜",
+  "희망일정1 시간",
+  "희망일정2 날짜",
+  "희망일정2 시간",
+  "희망일정3 날짜",
+  "희망일정3 시간",
 ] as const;
 
 type SurveySubmission = {
   nickname: string;
+  birthDate: string;
   contact: string;
   residence: string;
   consultationMethod: string;
@@ -58,6 +74,7 @@ type SurveySubmission = {
   supportTopicsDetail: string;
   hardshipLevel: string;
   expectedSupport: string[];
+  preferredSchedules: PreferredSchedule[];
   privacyConsent: boolean;
   answers: number[];
   totalScore: number;
@@ -72,6 +89,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   const submission = payload as Partial<SurveySubmission>;
   const nickname = submission.nickname?.trim();
+  const birthDate = submission.birthDate?.trim();
   const contact = submission.contact?.trim();
   const residence = submission.residence?.trim();
   const consultationMethod = submission.consultationMethod?.trim();
@@ -81,6 +99,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   const supportTopicsDetail = submission.supportTopicsDetail?.trim() ?? "";
   const hardshipLevel = submission.hardshipLevel?.trim();
   const expectedSupport = submission.expectedSupport;
+  const preferredSchedules = submission.preferredSchedules;
   const answers = submission.answers;
   const totalScore = submission.totalScore;
   const resultTitle = submission.resultTitle?.trim();
@@ -88,6 +107,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   if (
     !nickname ||
+    !birthDate ||
     !contact ||
     !residence ||
     !consultationMethod ||
@@ -99,7 +119,51 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     return null;
   }
 
+  if (!isValidBirthDate(birthDate)) {
+    return null;
+  }
+
   if (submission.privacyConsent !== true) {
+    return null;
+  }
+
+  if (
+    !Array.isArray(preferredSchedules) ||
+    preferredSchedules.length === 0 ||
+    preferredSchedules.length > PREFERRED_SCHEDULE_LIMIT
+  ) {
+    return null;
+  }
+
+  const normalizedPreferredSchedules = preferredSchedules.map((schedule) => {
+    if (!schedule || typeof schedule !== "object") {
+      return null;
+    }
+
+    const date = typeof schedule.date === "string" ? schedule.date.trim() : "";
+    const time = typeof schedule.time === "string" ? schedule.time.trim() : "";
+
+    if (
+      !isValidPreferredScheduleDate(date) ||
+      !isValidPreferredScheduleTime(time)
+    ) {
+      return null;
+    }
+
+    return { date, time };
+  });
+
+  if (normalizedPreferredSchedules.some((schedule) => schedule === null)) {
+    return null;
+  }
+
+  const completePreferredSchedules = normalizedPreferredSchedules as PreferredSchedule[];
+
+  if (
+    new Set(
+      completePreferredSchedules.map((schedule) => `${schedule.date} ${schedule.time}`),
+    ).size !== completePreferredSchedules.length
+  ) {
     return null;
   }
 
@@ -170,6 +234,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   return {
     nickname,
+    birthDate,
     contact,
     residence,
     consultationMethod,
@@ -179,6 +244,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     supportTopicsDetail,
     hardshipLevel,
     expectedSupport: normalizedExpectedSupport,
+    preferredSchedules: completePreferredSchedules,
     privacyConsent: submission.privacyConsent,
     answers,
     totalScore,
@@ -256,7 +322,10 @@ async function ensureHeaderRow(
   spreadsheetId: string,
   sheetName: string,
 ) {
-  const headerRange = sheetRange(sheetName, `A${HEADER_ROW}:W${HEADER_ROW}`);
+  const headerRange = sheetRange(
+    sheetName,
+    `A${HEADER_ROW}:${SHEET_LAST_COLUMN}${HEADER_ROW}`,
+  );
   const { data } = await sheets.spreadsheets.values.get({
     spreadsheetId,
     range: headerRange,
@@ -362,7 +431,7 @@ export async function POST(request: Request) {
     await ensureHeaderRow(sheets, config.spreadsheetId, config.sheetName);
     await sheets.spreadsheets.values.append({
       spreadsheetId: config.spreadsheetId,
-      range: sheetRange(config.sheetName, `A${FIRST_DATA_ROW}:W`),
+      range: sheetRange(config.sheetName, `A${FIRST_DATA_ROW}:${SHEET_LAST_COLUMN}`),
       valueInputOption: "RAW",
       insertDataOption: "INSERT_ROWS",
       requestBody: {
@@ -383,6 +452,12 @@ export async function POST(request: Request) {
             ...payload.answers,
             payload.totalScore,
             payload.resultTitle,
+            payload.birthDate,
+            ...Array.from({ length: PREFERRED_SCHEDULE_LIMIT }, (_, index) => {
+              const schedule = payload.preferredSchedules[index];
+
+              return [schedule?.date ?? "", schedule?.time ?? ""];
+            }).flat(),
           ],
         ],
       },

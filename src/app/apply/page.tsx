@@ -16,6 +16,16 @@ import {
   QUESTIONS,
   findResultBand,
 } from "./components/constants";
+import {
+  createPreferredScheduleSlots,
+  getKoreaDateString,
+  isValidBirthDate,
+  isValidPreferredScheduleDate,
+  isValidPreferredScheduleTime,
+  PREFERRED_SCHEDULE_LIMIT,
+  PREFERRED_SCHEDULE_MAX_DATE,
+  type PreferredSchedule,
+} from "@/lib/preferred-schedule";
 import type {
   FormStep,
   RespondentInfo,
@@ -39,6 +49,7 @@ export default function TestPage() {
   const [formStep, setFormStep] = useState<FormStep>("intro");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
+    birthDate: "",
     contact: "",
     residence: "",
     consultationMethod: "",
@@ -48,6 +59,7 @@ export default function TestPage() {
     supportTopicsDetail: "",
     hardshipLevel: "",
     expectedSupport: [],
+    preferredSchedules: createPreferredScheduleSlots(),
     privacyConsent: false,
   });
   const [answers, setAnswers] = useState<number[]>(
@@ -167,6 +179,21 @@ export default function TestPage() {
     setSubmitError("");
   };
 
+  const updatePreferredSchedule = (
+    index: number,
+    field: keyof PreferredSchedule,
+    value: string,
+  ) => {
+    setInfo((prev) => ({
+      ...prev,
+      preferredSchedules: prev.preferredSchedules.map((schedule, scheduleIndex) =>
+        scheduleIndex === index ? { ...schedule, [field]: value } : schedule,
+      ),
+    }));
+    clearFieldError("preferredSchedules");
+    setSubmitError("");
+  };
+
   const toggleSupportTopic = (topic: string) => {
     setInfo((prev) => {
       const alreadySelected = prev.supportTopics.includes(topic);
@@ -235,6 +262,7 @@ export default function TestPage() {
 
   const buildDebugInfo = (): RespondentInfo => ({
     nickname: info.nickname.trim() || DEFAULT_DEBUG_INFO.nickname,
+    birthDate: info.birthDate || DEFAULT_DEBUG_INFO.birthDate,
     contact: PHONE_PATTERN.test(info.contact.trim())
       ? info.contact.trim()
       : DEFAULT_DEBUG_INFO.contact,
@@ -255,6 +283,21 @@ export default function TestPage() {
       : "",
     hardshipLevel: info.hardshipLevel || DEFAULT_DEBUG_INFO.hardshipLevel,
     expectedSupport: info.expectedSupport,
+    preferredSchedules: createPreferredScheduleSlots().map((slot, index) => {
+      const schedule = info.preferredSchedules[index] ?? slot;
+      const scheduleDate = getKoreaDateString(
+        new Date(Date.now() + index * 24 * 60 * 60 * 1000),
+      );
+
+      return {
+        date:
+          schedule.date ||
+          (scheduleDate > PREFERRED_SCHEDULE_MAX_DATE
+            ? PREFERRED_SCHEDULE_MAX_DATE
+            : scheduleDate),
+        time: schedule.time || ["10:00", "14:00", "16:00"][index] || "10:00",
+      };
+    }),
     privacyConsent: info.privacyConsent || DEFAULT_DEBUG_INFO.privacyConsent,
   });
 
@@ -345,6 +388,12 @@ export default function TestPage() {
       nextFieldErrors.nickname = "닉네임을 입력해주세요.";
     }
 
+    if (!info.birthDate) {
+      nextFieldErrors.birthDate = "생년월일을 선택해주세요.";
+    } else if (!isValidBirthDate(info.birthDate)) {
+      nextFieldErrors.birthDate = "유효한 생년월일을 선택해주세요.";
+    }
+
     if (!info.contact.trim()) {
       nextFieldErrors.contact = "연락처를 입력해주세요.";
     } else if (!PHONE_PATTERN.test(info.contact.trim())) {
@@ -358,6 +407,43 @@ export default function TestPage() {
 
     if (!info.consultationMethod) {
       nextFieldErrors.consultationMethod = "상담방법을 선택해주세요.";
+    }
+
+    const preferredSchedules = info.preferredSchedules.slice(
+      0,
+      PREFERRED_SCHEDULE_LIMIT,
+    );
+    const firstPreferredSchedule = preferredSchedules[0];
+
+    if (!firstPreferredSchedule?.date || !firstPreferredSchedule.time) {
+      nextFieldErrors.preferredSchedules =
+        "희망 일정 1의 날짜와 시간을 모두 선택해주세요.";
+    } else {
+      const incompleteScheduleIndex = preferredSchedules.findIndex(
+        (schedule) => Boolean(schedule.date) !== Boolean(schedule.time),
+      );
+      const invalidScheduleIndex = preferredSchedules.findIndex(
+        (schedule) =>
+          Boolean(schedule.date && schedule.time) &&
+          (!isValidPreferredScheduleDate(schedule.date) ||
+            !isValidPreferredScheduleTime(schedule.time)),
+      );
+
+      if (incompleteScheduleIndex >= 0) {
+        nextFieldErrors.preferredSchedules = `희망 일정 ${incompleteScheduleIndex + 1}의 날짜와 시간을 모두 선택해주세요.`;
+      } else if (invalidScheduleIndex >= 0) {
+        nextFieldErrors.preferredSchedules =
+          "희망 일정은 오늘부터 2027년 4월 30일까지 선택할 수 있습니다.";
+      } else {
+        const completedScheduleKeys = preferredSchedules
+          .filter((schedule) => schedule.date && schedule.time)
+          .map((schedule) => `${schedule.date} ${schedule.time}`);
+
+        if (new Set(completedScheduleKeys).size !== completedScheduleKeys.length) {
+          nextFieldErrors.preferredSchedules =
+            "같은 희망 일정은 한 번만 선택해주세요.";
+        }
+      }
     }
 
     if (!info.consultationTopic) {
@@ -422,6 +508,7 @@ export default function TestPage() {
         },
         body: JSON.stringify({
           nickname: info.nickname.trim(),
+          birthDate: info.birthDate,
           contact: info.contact.trim(),
           residence: info.residence,
           consultationMethod: info.consultationMethod,
@@ -436,6 +523,9 @@ export default function TestPage() {
             : "",
           hardshipLevel: info.hardshipLevel,
           expectedSupport: info.expectedSupport,
+          preferredSchedules: info.preferredSchedules
+            .filter((schedule) => schedule.date || schedule.time)
+            .map(({ date, time }) => ({ date, time })),
           privacyConsent: info.privacyConsent,
           answers,
           totalScore: score,
@@ -576,6 +666,7 @@ export default function TestPage() {
               onPrivacyConsentChange={updatePrivacyConsent}
               onToggleSupportTopic={toggleSupportTopic}
               onUpdateField={updateInfoField}
+              onUpdatePreferredSchedule={updatePreferredSchedule}
               submitError={submitError}
             />
           ) : null}

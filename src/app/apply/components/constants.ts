@@ -15,6 +15,12 @@ export const INFO_FIELDS: InfoField[] = [
     inputMode: "text",
   },
   {
+    key: "birthDate",
+    label: "생년월일",
+    type: "date",
+    autoComplete: "bday",
+  },
+  {
     key: "contact",
     label: "연락처",
     type: "text",
@@ -139,6 +145,7 @@ export const DEFAULT_DEBUG_ANSWERS = Array.from(
 
 export const DEFAULT_DEBUG_INFO: RespondentInfo = {
   nickname: "디버그 사용자",
+  birthDate: "1990-01-01",
   contact: "01012345678",
   residence: DEFAULT_DEBUG_RESIDENCE,
   consultationMethod: CONSULTATION_METHOD_OPTIONS[0],
@@ -148,6 +155,7 @@ export const DEFAULT_DEBUG_INFO: RespondentInfo = {
   supportTopicsDetail: "",
   hardshipLevel: HARDSHIP_LEVEL_OPTIONS[0],
   expectedSupport: [],
+  preferredSchedules: [],
   privacyConsent: true,
 };
 
