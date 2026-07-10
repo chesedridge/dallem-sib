@@ -29,6 +29,7 @@ const ANSWER_COUNT = 9;
 const HEADER_ROW = 3;
 const FIRST_DATA_ROW = HEADER_ROW + 1;
 const SHEET_LAST_COLUMN = "AD";
+const isAligoSmsEnabled = process.env.ALIGO_SMS_ENABLED === "Y";
 const SHEET_HEADERS = [
   "접수일",
   "개인정보수집동의",
@@ -464,7 +465,7 @@ export async function POST(request: Request) {
     });
 
     // 문자 발송 실패가 신청 접수 자체를 막으면 안 되므로 오류는 기록만 한다.
-    if (getAligoConfig()) {
+    if (isAligoSmsEnabled && getAligoConfig()) {
       let smsSent = false;
 
       try {
@@ -489,10 +490,12 @@ export async function POST(request: Request) {
           });
         }
       }
-    } else {
+    } else if (isAligoSmsEnabled) {
       console.warn(
         "Aligo SMS skipped: ALIGO_API_KEY, ALIGO_USER_ID, ALIGO_SENDER 미설정",
       );
+    } else {
+      console.info("Aligo SMS skipped: notification sending is disabled");
     }
 
     return NextResponse.json({ ok: true });

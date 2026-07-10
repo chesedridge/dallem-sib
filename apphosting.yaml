@@ -41,3 +41,7 @@ env:
     secret: ALIGO_SENDER
     availability:
       - RUNTIME
+  - variable: ALIGO_SMS_ENABLED
+    value: "N"
+    availability:
+      - RUNTIME
