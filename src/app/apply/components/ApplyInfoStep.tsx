@@ -339,7 +339,7 @@ export function ApplyInfoStep({
     option === "기타" ? "기타(직접 입력)" : option;
 
   return (
-    <section className="rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:p-14">
+    <section className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
       <div className="mx-auto mb-12 max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           응답자 정보
@@ -721,18 +721,30 @@ export function ApplyInfoStep({
               개인정보 수집 및 이용 동의서
             </p>
             <p className="mt-2">
-              1. 개인정보의 수집•이용 목적: 상담 안내 연락 및 혜택 제공
+              1. 수집·이용 목적
             </p>
-            <p>2. 수집하는 개인정보의 항목: 닉네임, 휴대폰 번호</p>
             <p>
-              3. 개인정보의 이용 기간: 프로젝트 운영 기간
+              상담 안내 및 연락, 상담사 매칭·배정, 일정 조율 및 대리 예약,
+              계정 생성, 상담 이행 관리 (리마인드·노쇼 처리)
+            </p>
+            <p className="mt-2">2. 수집 항목</p>
+            <p>
+              닉네임(또는 이름), 생년월일, 휴대폰 번호, 거주지 또는 근무지,
+              상담방법, 상담주제, 현재 힘든 정도, 상담 기대사항
+            </p>
+            <p className="mt-2">3. 보유 및 이용 기간</p>
+            <p>
+              프로젝트 운영 기간 (2026년 4월 ~ 2027년 4월)
               <br />
-              (2026년 4월~2027년 4월)
+              단, 관계 법령에 따라 보존이 필요한 경우 해당 기간
             </p>
             <p className="mt-3 font-semibold text-[var(--color-text-body)]">
               개인정보 제3자 제공 동의
             </p>
-            <p className="mt-2">1. 개인정보를 제공받는 자: 헤세드릿지</p>
+            <p className="mt-2">1. 제공받는 자 : 헤세드릿지(마음달램)</p>
+            <p>2. 제공 목적 : 심리상담 서비스 제공 및 운영</p>
+            <p>3. 제공 항목 : 위 수집 항목 전체</p>
+            <p>4. 보유 및 이용 기간 : 서비스 이용 종료 시까지</p>
           </div>
           <label className="mt-4 flex cursor-pointer items-center gap-3 rounded-[18px] border border-transparent bg-bg-white px-4 py-3 transition-colors hover:border-[var(--color-border-soft)]">
             <input

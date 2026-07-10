@@ -539,6 +539,11 @@ export default function TestPage() {
           </p>
         </header>
 
+        <div
+          aria-hidden="true"
+          className="mt-10 -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden"
+        />
+
         {formStep === "intro" ? (
           <ApplyIntroStep onStart={() => setFormStep("eligibility")} />
         ) : null}
@@ -553,7 +558,7 @@ export default function TestPage() {
         <form
           id="phq-test-form"
           onSubmit={submit}
-          className={`mt-14 space-y-14 md:mt-16 md:space-y-16 ${
+          className={`mt-8 space-y-14 md:mt-16 md:space-y-16 ${
             shouldShowForm ? "" : "hidden"
           }`}
         >

@@ -10,7 +10,7 @@ export function ApplyEligibilityStep({
   onIneligible,
 }: ApplyEligibilityStepProps) {
   return (
-    <section className="mt-14 rounded-[36px] border border-border-soft bg-bg-white p-8 text-center md:mt-16 md:p-14">
+    <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-border-soft md:p-14">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           참여 대상 확인

@@ -18,7 +18,7 @@ export function ApplyQuestionStep({
   return (
     <section
       ref={sectionRef}
-      className="rounded-[36px] border border-[var(--color-border-soft)] bg-bg-white p-8 text-center md:p-14"
+      className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14"
     >
       <div className="mx-auto mb-12 max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
