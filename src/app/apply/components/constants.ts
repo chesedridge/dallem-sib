@@ -8,7 +8,7 @@ import type {
 export const INFO_FIELDS: InfoField[] = [
   {
     key: "nickname",
-    label: "이름 (또는 닉네임)",
+    label: "닉네임 (또는 이름)",
     type: "text",
     placeholder: "닉네임을 입력해주세요",
     autoComplete: "nickname",

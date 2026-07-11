@@ -349,28 +349,10 @@ export function ApplyInfoStep({
 }: ApplyInfoStepProps) {
   const formatTopicLabel = (option: string) =>
     option === "기타" ? "기타(직접 입력)" : option;
-  const [visibleScheduleCount, setVisibleScheduleCount] = useState(1);
   const today = getKoreaDateString();
   const preferredSchedules = Array.from(
     { length: PREFERRED_SCHEDULE_LIMIT },
     (_, index) => info.preferredSchedules[index] ?? { date: "", time: "" },
-  );
-  useEffect(() => {
-    const lastFilledScheduleCount = info.preferredSchedules.reduce(
-      (lastCount, schedule, index) =>
-        schedule.date || schedule.time ? index + 1 : lastCount,
-      0,
-    );
-
-    if (lastFilledScheduleCount > 0) {
-      setVisibleScheduleCount((count) =>
-        Math.max(count, lastFilledScheduleCount),
-      );
-    }
-  }, [info.preferredSchedules]);
-  const visiblePreferredSchedules = preferredSchedules.slice(
-    0,
-    visibleScheduleCount,
   );
 
   return (
@@ -525,11 +507,11 @@ export function ApplyInfoStep({
               희망 일정
             </p>
             <p className="mt-1 text-sm leading-6 text-[var(--color-text-sub)]">
-              날짜와 시간을 최대 3개까지 선택해주세요. 희망 일정 1은 필수입니다.
+              날짜와 시간을 모두 선택해주세요. 희망 일정 3개는 모두 필수입니다.
             </p>
           </div>
           <div className="space-y-3">
-            {visiblePreferredSchedules.map((schedule, index) => (
+            {preferredSchedules.map((schedule, index) => (
               <div
                 key={index}
                 className={`rounded-[20px] border p-4 ${
@@ -543,7 +525,7 @@ export function ApplyInfoStep({
                     희망 일정 {index + 1}
                   </p>
                   <span className="rounded-full bg-bg-white px-2.5 py-1 text-xs font-medium text-[var(--color-text-sub)]">
-                    {index === 0 ? "필수" : "선택"}
+                    필수
                   </span>
                 </div>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -597,23 +579,6 @@ export function ApplyInfoStep({
               </div>
             ))}
           </div>
-          {visibleScheduleCount < PREFERRED_SCHEDULE_LIMIT ? (
-            <button
-              type="button"
-              onClick={() =>
-                setVisibleScheduleCount((count) =>
-                  Math.min(count + 1, PREFERRED_SCHEDULE_LIMIT),
-                )
-              }
-              className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[18px] border border-[var(--color-border-strong)] bg-bg-white px-4 py-3 text-sm font-semibold text-[var(--color-text-body)] transition-transform active:scale-[0.96]"
-            >
-              <span aria-hidden="true">+</span>
-              희망 일정 추가
-              <span className="text-[var(--color-text-sub)]">
-                ({visibleScheduleCount}/{PREFERRED_SCHEDULE_LIMIT})
-              </span>
-            </button>
-          ) : null}
           {fieldErrors.preferredSchedules ? (
             <p
               id="preferredSchedules-error"

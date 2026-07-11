@@ -130,8 +130,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   if (
     !Array.isArray(preferredSchedules) ||
-    preferredSchedules.length === 0 ||
-    preferredSchedules.length > PREFERRED_SCHEDULE_LIMIT
+    preferredSchedules.length !== PREFERRED_SCHEDULE_LIMIT
   ) {
     return null;
   }

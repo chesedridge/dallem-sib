@@ -413,14 +413,11 @@ export default function TestPage() {
       0,
       PREFERRED_SCHEDULE_LIMIT,
     );
-    const firstPreferredSchedule = preferredSchedules[0];
-
-    if (!firstPreferredSchedule?.date || !firstPreferredSchedule.time) {
-      nextFieldErrors.preferredSchedules =
-        "희망 일정 1의 날짜와 시간을 모두 선택해주세요.";
+    if (preferredSchedules.length !== PREFERRED_SCHEDULE_LIMIT) {
+      nextFieldErrors.preferredSchedules = "희망 일정 3개를 모두 입력해주세요.";
     } else {
-      const incompleteScheduleIndex = preferredSchedules.findIndex(
-        (schedule) => Boolean(schedule.date) !== Boolean(schedule.time),
+      const missingScheduleIndex = preferredSchedules.findIndex(
+        (schedule) => !schedule.date || !schedule.time,
       );
       const invalidScheduleIndex = preferredSchedules.findIndex(
         (schedule) =>
@@ -429,8 +426,8 @@ export default function TestPage() {
             !isValidPreferredScheduleTime(schedule.time)),
       );
 
-      if (incompleteScheduleIndex >= 0) {
-        nextFieldErrors.preferredSchedules = `희망 일정 ${incompleteScheduleIndex + 1}의 날짜와 시간을 모두 선택해주세요.`;
+      if (missingScheduleIndex >= 0) {
+        nextFieldErrors.preferredSchedules = `희망 일정 ${missingScheduleIndex + 1}의 날짜와 시간을 모두 선택해주세요.`;
       } else if (invalidScheduleIndex >= 0) {
         nextFieldErrors.preferredSchedules =
           "희망 일정은 오늘부터 2027년 4월 30일까지 선택할 수 있습니다.";
@@ -524,7 +521,7 @@ export default function TestPage() {
           hardshipLevel: info.hardshipLevel,
           expectedSupport: info.expectedSupport,
           preferredSchedules: info.preferredSchedules
-            .filter((schedule) => schedule.date || schedule.time)
+            .slice(0, PREFERRED_SCHEDULE_LIMIT)
             .map(({ date, time }) => ({ date, time })),
           privacyConsent: info.privacyConsent,
           answers,
