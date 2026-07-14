@@ -47,13 +47,6 @@ export function isValidCalendarDate(value: string): boolean {
   );
 }
 
-export function isValidBirthDate(
-  value: string,
-  today = getKoreaDateString(),
-): boolean {
-  return isValidCalendarDate(value) && value <= today;
-}
-
 export function isValidPreferredScheduleDate(
   value: string,
   today = getKoreaDateString(),

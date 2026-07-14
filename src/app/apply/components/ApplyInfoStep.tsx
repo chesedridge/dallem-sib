@@ -399,7 +399,7 @@ export function ApplyInfoStep({
                     }
                     className={`h-14 w-full appearance-none rounded-[18px] border px-5 pr-12 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)] focus:bg-bg-white ${inputClassName}`}
                   >
-                    <option value="">거주지를 선택해주세요</option>
+                    <option value="">{field.placeholder ?? "선택해주세요"}</option>
                     {field.options?.map((option) => (
                       <option key={option} value={option}>
                         {option}
@@ -421,7 +421,7 @@ export function ApplyInfoStep({
                   inputMode={field.inputMode}
                   maxLength={field.maxLength}
                   pattern={field.pattern}
-                  max={field.key === "birthDate" ? today : field.max}
+                  max={field.max}
                   aria-invalid={fieldError ? "true" : "false"}
                   aria-describedby={
                     fieldError ? `info-${field.key}-error` : undefined
@@ -835,8 +835,8 @@ export function ApplyInfoStep({
             </p>
             <p className="mt-2">2. 수집 항목</p>
             <p>
-              닉네임(또는 이름), 생년월일, 휴대폰 번호, 거주지 또는 근무지,
-              상담방법, 희망 일정(날짜·시간), 상담주제, 현재 힘든 정도, 상담 기대사항
+              닉네임(또는 이름), 휴대폰 번호, 상담방법, 희망 일정(날짜·시간),
+              상담주제, 현재 힘든 정도, 상담 기대사항
             </p>
             <p className="mt-2">3. 보유 및 이용 기간</p>
             <p>

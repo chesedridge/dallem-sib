@@ -12,9 +12,7 @@ export type ResultBand = {
 
 export type RespondentInfo = {
   nickname: string;
-  birthDate: string;
   contact: string;
-  residence: string;
   consultationMethod: string;
   consultationTopic: string;
   consultationTopicDetail: string;

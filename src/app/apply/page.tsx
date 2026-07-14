@@ -19,7 +19,6 @@ import {
 import {
   createPreferredScheduleSlots,
   getKoreaDateString,
-  isValidBirthDate,
   isValidPreferredScheduleDate,
   isValidPreferredScheduleTime,
   PREFERRED_SCHEDULE_LIMIT,
@@ -49,9 +48,7 @@ export default function TestPage() {
   const [formStep, setFormStep] = useState<FormStep>("intro");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
-    birthDate: "",
     contact: "",
-    residence: "",
     consultationMethod: "",
     consultationTopic: "",
     consultationTopicDetail: "",
@@ -262,11 +259,9 @@ export default function TestPage() {
 
   const buildDebugInfo = (): RespondentInfo => ({
     nickname: info.nickname.trim() || DEFAULT_DEBUG_INFO.nickname,
-    birthDate: info.birthDate || DEFAULT_DEBUG_INFO.birthDate,
     contact: PHONE_PATTERN.test(info.contact.trim())
       ? info.contact.trim()
       : DEFAULT_DEBUG_INFO.contact,
-    residence: info.residence || DEFAULT_DEBUG_INFO.residence,
     consultationMethod:
       info.consultationMethod || DEFAULT_DEBUG_INFO.consultationMethod,
     consultationTopic:
@@ -388,21 +383,11 @@ export default function TestPage() {
       nextFieldErrors.nickname = "닉네임을 입력해주세요.";
     }
 
-    if (!info.birthDate) {
-      nextFieldErrors.birthDate = "생년월일을 선택해주세요.";
-    } else if (!isValidBirthDate(info.birthDate)) {
-      nextFieldErrors.birthDate = "유효한 생년월일을 선택해주세요.";
-    }
-
     if (!info.contact.trim()) {
       nextFieldErrors.contact = "연락처를 입력해주세요.";
     } else if (!PHONE_PATTERN.test(info.contact.trim())) {
       nextFieldErrors.contact =
         "010으로 시작하는 10~11자리 숫자를 입력해주세요.";
-    }
-
-    if (!info.residence) {
-      nextFieldErrors.residence = "거주지를 선택해주세요.";
     }
 
     if (!info.consultationMethod) {
@@ -505,9 +490,7 @@ export default function TestPage() {
         },
         body: JSON.stringify({
           nickname: info.nickname.trim(),
-          birthDate: info.birthDate,
           contact: info.contact.trim(),
-          residence: info.residence,
           consultationMethod: info.consultationMethod,
           consultationTopic: info.consultationTopic,
           consultationTopicDetail:

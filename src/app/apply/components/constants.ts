@@ -15,12 +15,6 @@ export const INFO_FIELDS: InfoField[] = [
     inputMode: "text",
   },
   {
-    key: "birthDate",
-    label: "생년월일",
-    type: "date",
-    autoComplete: "bday",
-  },
-  {
     key: "contact",
     label: "연락처",
     type: "text",
@@ -29,44 +23,6 @@ export const INFO_FIELDS: InfoField[] = [
     inputMode: "numeric",
     maxLength: 11,
     pattern: "^010\\d{7,8}$",
-  },
-  {
-    key: "residence",
-    label: "거주지 또는 근무지",
-    type: "select",
-    options: [
-      "가평군",
-      "고양시",
-      "과천시",
-      "광명시",
-      "광주시",
-      "구리시",
-      "군포시",
-      "김포시",
-      "남양주시",
-      "동두천시",
-      "부천시",
-      "성남시",
-      "수원시",
-      "시흥시",
-      "안산시",
-      "안성시",
-      "안양시",
-      "양주시",
-      "양평군",
-      "여주시",
-      "연천군",
-      "오산시",
-      "용인시",
-      "의왕시",
-      "의정부시",
-      "이천시",
-      "파주시",
-      "평택시",
-      "포천시",
-      "하남시",
-      "화성시",
-    ],
   },
 ];
 
@@ -122,8 +78,6 @@ export const EXPECTED_SUPPORT_OPTIONS = [
   "잘 모르겠어요",
 ] as const;
 
-export const DEFAULT_DEBUG_RESIDENCE =
-  INFO_FIELDS.find((field) => field.key === "residence")?.options?.[0] ?? "";
 export const PHONE_PATTERN = /^010\d{7,8}$/;
 
 export const QUESTIONS = [
@@ -145,9 +99,7 @@ export const DEFAULT_DEBUG_ANSWERS = Array.from(
 
 export const DEFAULT_DEBUG_INFO: RespondentInfo = {
   nickname: "디버그 사용자",
-  birthDate: "1990-01-01",
   contact: "01012345678",
-  residence: DEFAULT_DEBUG_RESIDENCE,
   consultationMethod: CONSULTATION_METHOD_OPTIONS[0],
   consultationTopic: CONSULTATION_TOPIC_OPTIONS[0],
   consultationTopicDetail: "",

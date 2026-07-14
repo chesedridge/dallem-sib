@@ -15,7 +15,6 @@ import {
   type SheetsClient,
 } from "@/lib/google";
 import {
-  isValidBirthDate,
   isValidPreferredScheduleDate,
   isValidPreferredScheduleTime,
   PREFERRED_SCHEDULE_LIMIT,
@@ -65,9 +64,7 @@ const SHEET_HEADERS = [
 
 type SurveySubmission = {
   nickname: string;
-  birthDate: string;
   contact: string;
-  residence: string;
   consultationMethod: string;
   consultationTopic: string;
   consultationTopicDetail: string;
@@ -90,9 +87,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   const submission = payload as Partial<SurveySubmission>;
   const nickname = submission.nickname?.trim();
-  const birthDate = submission.birthDate?.trim();
   const contact = submission.contact?.trim();
-  const residence = submission.residence?.trim();
   const consultationMethod = submission.consultationMethod?.trim();
   const consultationTopic = submission.consultationTopic?.trim();
   const consultationTopicDetail = submission.consultationTopicDetail?.trim() ?? "";
@@ -108,19 +103,13 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   if (
     !nickname ||
-    !birthDate ||
     !contact ||
-    !residence ||
     !consultationMethod ||
     !consultationTopic ||
     !hardshipLevel ||
     !resultTitle ||
     !resultDescription
   ) {
-    return null;
-  }
-
-  if (!isValidBirthDate(birthDate)) {
     return null;
   }
 
@@ -234,9 +223,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
 
   return {
     nickname,
-    birthDate,
     contact,
-    residence,
     consultationMethod,
     consultationTopic,
     consultationTopicDetail,
@@ -441,7 +428,8 @@ export async function POST(request: Request) {
             payload.privacyConsent ? "동의" : "미동의",
             payload.nickname,
             payload.contact,
-            payload.residence,
+            // 기존 시트의 열 순서를 유지하되, 지역은 더 이상 수집하지 않는다.
+            "",
             payload.consultationMethod,
             payload.consultationTopic,
             payload.consultationTopicDetail,
@@ -452,7 +440,8 @@ export async function POST(request: Request) {
             ...payload.answers,
             payload.totalScore,
             payload.resultTitle,
-            payload.birthDate,
+            // 기존 시트의 열 순서를 유지하되, 생년월일은 더 이상 수집하지 않는다.
+            "",
             ...Array.from({ length: PREFERRED_SCHEDULE_LIMIT }, (_, index) => {
               const schedule = payload.preferredSchedules[index];
 
