@@ -13,6 +13,11 @@ export function PostResultStep({
   resultBand,
   totalScore,
 }: PostResultStepProps) {
+  const resultDescription =
+    resultBand.min === 20
+      ? "현재 우울감 수준이 높게 나타나, 보다 세심한 이해와 지원이 필요한 상태로 보입니다."
+      : resultBand.description;
+
   return (
     <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
       <div className="mx-auto max-w-3xl text-center">
@@ -36,9 +41,6 @@ export function PostResultStep({
         <p className="mt-1 text-4xl font-extrabold tabular-nums text-[var(--color-primary-strong)]">
           {totalScore}
           <span className="ml-1 text-lg">점</span>
-        </p>
-        <p className="mt-4 text-pretty text-sm leading-6 break-keep text-[var(--color-text-body)] md:text-base md:leading-7">
-          검사 결과가 정상적으로 저장되었습니다.
         </p>
       </div>
     </section>

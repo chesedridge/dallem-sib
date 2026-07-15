@@ -50,7 +50,7 @@ export default function PostPage() {
     formStep === "info"
       ? "검사 시작하기"
       : isSubmitting
-        ? "저장 중..."
+        ? "불러오는중"
         : "결과보기";
   const isPrimaryButtonDisabled = isSubmitting || showQuestionProgress;
   const resultBadgeClass =
