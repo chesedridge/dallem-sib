@@ -30,7 +30,7 @@ export function PostResultStep({
           {resultBand.title}
         </h2>
         <p className="mt-4 text-pretty text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-          {resultBand.description}
+          {resultDescription}
         </p>
       </div>
 
