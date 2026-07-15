@@ -13,7 +13,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Google Sheets Storage
 
-Survey responses from `/apply` are saved through `POST /api/survey-results`, then appended to Google Sheets.
+Survey responses from `/apply` are saved through `POST /api/survey-results`, then appended to Google Sheets. The PHQ-9 post-survey at `/post` collects only a nickname and contact number before the questions, and saves responses through `POST /api/post-survey-results` to the fixed `post-raw` sheet tab.
 
 ### 1. Create and share a sheet
 
@@ -59,6 +59,8 @@ The API writes these columns automatically:
 - `위험단계`
 
 If the target sheet is empty, the header row is created automatically on row 3, and data starts from row 4.
+
+The `post-raw` tab uses row 1 for its header and stores the test date, nickname, contact number, nine answers, total score, and result band from row 2.
 
 ## GA4 Analytics Sync
 
