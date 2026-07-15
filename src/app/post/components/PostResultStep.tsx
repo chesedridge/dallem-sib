@@ -8,15 +8,20 @@ type PostResultStepProps = {
   totalScore: number;
 };
 
+const POST_RESULT_DESCRIPTIONS: Record<number, string> = {
+  0: "유의한 수준의 우울감이 시사되지 않습니다.",
+  5: "다소 경미한 수준의 우울감이 있으나 일상생활에 지장을 줄 정도는 아닙니다.\n다만, 이러한 기분상태가 지속되면 개인의 신체적, 심리적 대처 자원을 저하시킬 수 있습니다.",
+  10: "중간 정도 수준의 우울감이 시사됩니다.\n이러한 수준의 우울감은 흔히 신체적, 심리적 대처 자원을 저하시키며\n개인의 일상생활을 어렵게 만들기도 합니다.",
+  20: "현재 우울감 수준이 높게 나타나, 보다 세심한 이해와 지원이 필요한 상태로 보입니다.",
+};
+
 export function PostResultStep({
   resultBadgeClass,
   resultBand,
   totalScore,
 }: PostResultStepProps) {
   const resultDescription =
-    resultBand.min === 20
-      ? "현재 우울감 수준이 높게 나타나, 보다 세심한 이해와 지원이 필요한 상태로 보입니다."
-      : resultBand.description;
+    POST_RESULT_DESCRIPTIONS[resultBand.min] ?? resultBand.description;
 
   return (
     <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
