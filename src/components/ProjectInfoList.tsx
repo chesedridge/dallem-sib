@@ -4,7 +4,7 @@ const INFO_ITEMS = [
     value: (
       <>
         <span className="whitespace-pre-wrap">
-          정서 , 관계 등의 어려움을 겪고 있는 경기도 거주자 또는
+          정서, 관계 등의 어려움을 겪고 있는 경기도 거주 직장인 또는
           <br />
           경기도 소재 회사에 재직중인 직장인
         </span>

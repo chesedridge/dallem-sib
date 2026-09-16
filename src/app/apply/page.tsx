@@ -34,8 +34,8 @@ import type {
 } from "./components/types";
 
 const DEBUG_STEPS: FormStep[] = [
-  "intro",
   "eligibility",
+  "intro",
   "question",
   "info",
   "result",
@@ -45,7 +45,7 @@ const DEBUG_STEPS: FormStep[] = [
 
 export default function TestPage() {
   const isDebugMode = process.env.NODE_ENV !== "production";
-  const [formStep, setFormStep] = useState<FormStep>("intro");
+  const [formStep, setFormStep] = useState<FormStep>("eligibility");
   const [info, setInfo] = useState<RespondentInfo>({
     nickname: "",
     contact: "",
@@ -540,10 +540,10 @@ export default function TestPage() {
   return (
     <div className="min-h-screen bg-bg-warm-light py-14 pb-28 md:py-20 md:pb-20">
       {isDebugMode ? (
-        <div className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
+        <details className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
             Debug Tools
-          </p>
+          </summary>
           <button
             type="button"
             onClick={() => fillDebugForm("info")}
@@ -563,7 +563,7 @@ export default function TestPage() {
               </button>
             ))}
           </div>
-        </div>
+        </details>
       ) : null}
 
       {formStep === "question" && showProgressPanel ? (
@@ -598,8 +598,8 @@ export default function TestPage() {
 
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
-          <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            경기도 거주자 또는 경기도 소재 회사에 재직중인 직장인을 위한
+          <p className="mx-auto mb-2 max-w-[42rem] break-keep text-[15px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
+            경기도 거주 직장인 또는 경기도 소재 회사에 재직중인 직장인을 위한
           </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
             멘탈케어 프로젝트
@@ -614,15 +614,15 @@ export default function TestPage() {
           className="mt-10 -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden"
         />
 
-        {formStep === "intro" ? (
-          <ApplyIntroStep onStart={() => setFormStep("eligibility")} />
-        ) : null}
-
         {formStep === "eligibility" ? (
           <ApplyEligibilityStep
-            onEligible={() => setFormStep("question")}
+            onEligible={() => setFormStep("intro")}
             onIneligible={() => setFormStep("ineligible")}
           />
+        ) : null}
+
+        {formStep === "intro" ? (
+          <ApplyIntroStep onStart={() => setFormStep("question")} />
         ) : null}
 
         <form

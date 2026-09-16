@@ -10,22 +10,35 @@ export function ApplyEligibilityStep({
   onIneligible,
 }: ApplyEligibilityStepProps) {
   return (
-    <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-border-soft md:p-14">
+    <section className="mx-auto mt-8 max-w-[48rem] rounded-[28px] border border-border-soft bg-bg-white px-5 py-7 text-center shadow-[0_12px_40px_rgba(128,86,79,0.04)] sm:px-8 md:mt-10 md:rounded-[32px] md:p-10">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
+        <h2 className="mb-3 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           참여 대상 확인
         </h2>
-        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-          본 프로젝트는 경기도에 거주 중이거나 경기도 소재 회사에 재직중인
-          직장인을 대상으로 진행됩니다.
+        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[16px] md:leading-7">
+          직장인으로서 아래 조건 중 하나에 해당하면 이용할 수 있습니다.
         </p>
-        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-          ※ 경기도와 관련된 사업장이 있는 기업에 재직 중이라면 대부분 참여가
-          가능합니다 ※
-        </p>
-        <div className="mx-auto mt-8 max-w-3xl rounded-[28px] bg-bg-warm px-6 py-9 text-center">
-          <h3 className="font-bold text-base">경기도 소재 기업 재직자 참여 기준</h3>
-          <ul className="mt-5 list-outside list-disc space-y-1 px-6 text-left text-sm md:text-base">
+        <ol className="my-8 space-y-6 rounded-2xl bg-bg-warm px-6 py-5 text-left text-[15px] font-semibold leading-7 text-text-dark md:my-10 md:space-y-7 md:px-8 md:py-6 md:text-[18px] md:leading-8">
+          {[
+            "경기도에 거주하는 직장인입니다",
+            "경기도 소재 회사에 재직 중인 직장인입니다",
+          ].map((condition, index) => (
+            <li key={condition} className="flex items-start gap-3 md:gap-4">
+              <span
+                aria-hidden="true"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-soft font-semibold text-primary-strong md:h-8 md:w-8"
+              >
+                {index + 1}
+              </span>
+              <span className="break-keep">{condition}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="border-y border-border-soft text-left">
+          <h3 className="py-4 text-sm font-semibold text-text-body md:text-[15px]">
+            경기도 소재 기업 재직자 참여 기준
+          </h3>
+          <ul className="list-outside list-disc space-y-3 pb-5 pl-5 pr-2 text-left text-sm leading-6 marker:text-primary-strong">
             <li>경기도에 본사가 있는 기업에 재직 중인 경우</li>
             <li>본사는 다른 지역에 있더라도 경기도에 지사, 지점, 사무소 등
               사업장이 있는 기업에 재직 중인 경우
@@ -44,14 +57,14 @@ export function ApplyEligibilityStep({
         <button
           type="button"
           onClick={onEligible}
-          className="rounded-full bg-primary px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-primary-light md:text-[17px]"
+          className="rounded-full bg-primary px-6 py-4 text-[16px] font-semibold text-white transition-colors hover:bg-primary-light focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-strong md:text-[17px]"
         >
           네, 해당합니다
         </button>
         <button
           type="button"
           onClick={onIneligible}
-          className="rounded-full border border-[var(--color-border-strong)] bg-bg-white px-6 py-4 text-[16px] font-semibold text-[var(--color-text-body)] transition-colors hover:bg-bg-gray md:text-[17px]"
+          className="rounded-full border border-[var(--color-border-strong)] bg-bg-white px-6 py-4 text-[16px] font-semibold text-text-body transition-colors hover:bg-bg-gray focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary-strong md:text-[17px]"
         >
           아니요
         </button>

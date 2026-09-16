@@ -29,16 +29,13 @@ export default function BarriersSection() {
     <section className="relative w-full bg-bg-warm">
       <div className="page-shell">
         <p className="mx-auto mb-12 max-w-5xl text-center text-[18px] font-extrabold leading-[1.45] tracking-[-0.035em] text-text-dark md:mb-16 md:text-[32px]">
-          우울 , 불안 , 스트레스 등 정서적 어려움을 겪는
+          우울, 불안, 스트레스 등 정서적 어려움을 겪는
           <br />
-          <span className="text-primary-strong">경기도 거주자</span> 또는{" "}
-          <span className="text-primary-strong">
-            경기도 소재 회사에 재직중인 직장인
-          </span>
+          <span className="text-primary-strong">직장인</span>
           을 위한
           <br />
           <span className="text-primary-strong">무료 심리상담</span>{" "}
-          지원사업입니다
+          지원사업입니다.
         </p>
 
         <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-5 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-20 md:py-6">
