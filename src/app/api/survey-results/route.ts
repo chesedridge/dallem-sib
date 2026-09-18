@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server";
+import {
+  isSurveyEligible,
+  SURVEY_INELIGIBLE_MESSAGE,
+} from "@/lib/survey-eligibility";
 
 import {
   buildSurveyConfirmationSms,
@@ -357,6 +361,13 @@ export async function POST(request: Request) {
       {
         message: "전송된 응답 형식이 올바르지 않습니다.",
       },
+      { status: 400 },
+    );
+  }
+
+  if (!isSurveyEligible(payload.answers)) {
+    return NextResponse.json(
+      { message: SURVEY_INELIGIBLE_MESSAGE },
       { status: 400 },
     );
   }

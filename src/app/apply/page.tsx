@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { isSurveyEligible } from "@/lib/survey-eligibility";
 
 import { ApplyEligibilityStep } from "./components/ApplyEligibilityStep";
 import { ApplyInfoStep } from "./components/ApplyInfoStep";
@@ -78,6 +79,7 @@ export default function TestPage() {
   }, [totalScore]);
   const answeredCount = answers.filter((score) => score >= 0).length;
   const isQuestionStepComplete = answeredCount === QUESTIONS.length;
+  const isEligible = isSurveyEligible(answers);
   const shouldShowForm = formStep === "question" || formStep === "info";
   const showQuestionProgress =
     formStep === "question" && !isQuestionStepComplete;
@@ -311,6 +313,11 @@ export default function TestPage() {
     setInfo(nextInfo);
 
     if (nextStep === "info") {
+      if (!isSurveyEligible(nextAnswers)) {
+        setTotalScore(nextAnswers.reduce((sum, answer) => sum + answer, 0));
+        setFormStep("result");
+        return;
+      }
       setTotalScore(null);
       setFormStep("info");
       return;
@@ -374,6 +381,12 @@ export default function TestPage() {
       setSubmitError("");
       setTotalScore(answers.reduce((acc, current) => acc + current, 0));
       setFormStep("result");
+      return;
+    }
+
+    if (!isEligible) {
+      setTotalScore(answers.reduce((sum, answer) => sum + answer, 0));
+      setFormStep(isQuestionStepComplete ? "result" : "question");
       return;
     }
 
@@ -702,7 +715,10 @@ export default function TestPage() {
 
         {formStep === "result" && resultBand ? (
           <ApplyResultStep
-            onProceedToApply={() => setFormStep("info")}
+            isEligible={isEligible}
+            onProceedToApply={() => {
+              if (isEligible) setFormStep("info");
+            }}
             resultBadgeClass={resultBadgeClass}
             resultBand={resultBand}
           />
