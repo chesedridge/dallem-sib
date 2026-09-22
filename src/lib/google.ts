@@ -244,3 +244,29 @@ export async function replaceSheetValues(
     },
   });
 }
+
+export async function ensureSheetColumnCapacity(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  sheetName: string,
+  requiredColumns: number,
+) {
+  const { data } = await sheets.spreadsheets.get({
+    spreadsheetId,
+    fields: "sheets.properties(sheetId,title,gridProperties.columnCount)",
+  });
+  const properties = data.sheets?.find(sheet => sheet.properties?.title === sheetName)?.properties;
+  if (properties?.sheetId == null || properties.gridProperties?.columnCount == null) {
+    throw new Error("Sheet column metadata is unavailable");
+  }
+  const missingColumns = requiredColumns - properties.gridProperties.columnCount;
+  if (missingColumns <= 0) return;
+  await sheets.spreadsheets.batchUpdate({
+    spreadsheetId,
+    requestBody: { requests: [{ appendDimension: {
+      sheetId: properties.sheetId,
+      dimension: "COLUMNS",
+      length: missingColumns,
+    } }] },
+  });
+}

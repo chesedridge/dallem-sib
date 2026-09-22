@@ -3,9 +3,12 @@
 type PostRespondentInfo = {
   nickname: string;
   contact: string;
+  timing: string;
 };
 
-type PostRespondentInfoErrors = Partial<Record<keyof PostRespondentInfo, string>>;
+type PostRespondentInfoErrors = Partial<
+  Record<keyof PostRespondentInfo, string>
+>;
 
 type PostInfoStepProps = {
   fieldErrors: PostRespondentInfoErrors;
@@ -38,14 +41,15 @@ export function PostInfoStep({
   onUpdateField,
 }: PostInfoStepProps) {
   return (
-    <section className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
+    <section className="apply-info-card bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
       <div className="mx-auto mb-10 max-w-3xl text-center">
         <h2 className="text-balance text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           우울(PHQ-9) 자가검진
         </h2>
         <p className="mt-4 text-pretty text-[15px] leading-7 break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
           검사 시작 전 닉네임과 연락처를 입력해주세요.
-          <br />검사 진행은 약 1분 정도 소요됩니다.
+          <br />
+          검사 진행은 약 1분 정도 소요됩니다.
         </p>
       </div>
 
@@ -98,6 +102,38 @@ export function PostInfoStep({
             </div>
           );
         })}
+        <fieldset
+          className="mx-auto max-w-[36rem] space-y-3 text-left"
+          aria-describedby={
+            fieldErrors.timing ? "post-timing-error" : undefined
+          }
+        >
+          <legend className="text-[15px] font-semibold md:text-[17px]">
+            사후검사 결과 진행 시기
+          </legend>
+          {["4", "6"].map((timing) => (
+            <label key={timing} className="survey-choice">
+              <input
+                type="radio"
+                name="postTiming"
+                value={timing}
+                checked={info.timing === timing}
+                onChange={() => onUpdateField("timing", timing)}
+              />
+              <span>{timing}회기 후 진행</span>
+            </label>
+          ))}
+          {fieldErrors.timing && (
+            <p id="post-timing-error" className="text-sm text-primary-strong">
+              {fieldErrors.timing}
+            </p>
+          )}
+        </fieldset>
+        <p className="mx-auto max-w-[36rem] text-sm leading-6 text-text-sub">
+          상담 신청 때 입력한 연락처로 사전 검사 기록을 확인합니다.
+          <br />
+          검사 결과는 사전·사후 변화 확인에 사용됩니다.
+        </p>
       </div>
     </section>
   );

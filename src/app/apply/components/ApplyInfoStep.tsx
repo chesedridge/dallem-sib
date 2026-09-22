@@ -1,5 +1,7 @@
 "use client";
 
+import { AFFILIATION_OPTIONS } from "@/lib/survey-policy";
+
 import { useEffect, useId, useRef, useState } from "react";
 
 import {
@@ -356,7 +358,7 @@ export function ApplyInfoStep({
   );
 
   return (
-    <section className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
+    <section className="apply-info-card bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
       <div className="mx-auto mb-12 max-w-3xl text-center">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           응답자 정보
@@ -366,6 +368,17 @@ export function ApplyInfoStep({
         </p>
       </div>
       <div className="space-y-9">
+        <fieldset className="mx-auto max-w-[36rem] space-y-3 text-left" aria-describedby={fieldErrors.affiliation ? "affiliation-error" : undefined}>
+          <legend className="text-[15px] font-semibold md:text-[17px]">소속확인</legend>
+          <p className="text-sm text-text-sub">직장인 소속을 선택해주세요.</p>
+          {AFFILIATION_OPTIONS.map(option => (
+            <label key={option} className="survey-choice">
+              <input type="radio" name="affiliation" value={option} checked={info.affiliation === option} onChange={() => onUpdateField("affiliation", option)} />
+              <span>{option}</span>
+            </label>
+          ))}
+          {fieldErrors.affiliation && <p id="affiliation-error" role="alert" className="text-sm text-primary-strong">{fieldErrors.affiliation}</p>}
+        </fieldset>
         {INFO_FIELDS.map((field) => {
           const fieldError = fieldErrors[field.key];
           const inputClassName = fieldError
@@ -528,7 +541,7 @@ export function ApplyInfoStep({
                     필수
                   </span>
                 </div>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div className="mt-3 grid gap-3 min-[360px]:grid-cols-2">
                   <label className="space-y-1.5">
                     <span className="block text-sm font-medium text-[var(--color-text-body)]">
                       날짜
@@ -550,7 +563,7 @@ export function ApplyInfoStep({
                       onChange={(event) =>
                         onUpdatePreferredSchedule(index, "date", event.target.value)
                       }
-                      className="h-14 w-full rounded-[18px] border border-transparent bg-bg-white px-4 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
+                      className="h-14 w-full min-w-0 rounded-[18px] border border-transparent bg-bg-white px-2 text-[14px] md:px-4 md:text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
                     />
                   </label>
                   <label className="space-y-1.5">
@@ -572,7 +585,7 @@ export function ApplyInfoStep({
                       onChange={(event) =>
                         onUpdatePreferredSchedule(index, "time", event.target.value)
                       }
-                      className="h-14 w-full rounded-[18px] border border-transparent bg-bg-white px-4 text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
+                      className="h-14 w-full min-w-0 rounded-[18px] border border-transparent bg-bg-white px-2 text-[14px] md:px-4 md:text-[15px] text-[var(--color-text-body)] outline-none transition-colors focus:border-[var(--color-border-strong)]"
                     />
                   </label>
                 </div>
@@ -831,12 +844,12 @@ export function ApplyInfoStep({
             </p>
             <p>
               상담 안내 및 연락, 상담사 매칭·배정, 일정 조율 및 대리 예약,
-              계정 생성, 상담 이행 관리 (리마인드·노쇼 처리)
+              계정 생성, 상담 이행 관리 (리마인드·노쇼 처리), 연락처를 통한 사전·사후 검사 결과 연결 및 비교
             </p>
             <p className="mt-2">2. 수집 항목</p>
             <p>
-              닉네임(또는 이름), 휴대폰 번호, 상담방법, 희망 일정(날짜·시간),
-              상담주제, 현재 힘든 정도, 상담 기대사항
+              닉네임(또는 이름), 휴대폰 번호, 소속 구분, 상담방법, 희망 일정(날짜·시간),
+              상담주제, 현재 힘든 정도, 상담 기대사항, 검사 응답 및 결과, 사후검사 시기
             </p>
             <p className="mt-2">3. 보유 및 이용 기간</p>
             <p>

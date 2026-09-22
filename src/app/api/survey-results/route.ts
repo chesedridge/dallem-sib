@@ -1,3 +1,4 @@
+import { AFFILIATION_OPTIONS } from "@/lib/survey-policy";
 import { NextResponse } from "next/server";
 import {
   isSurveyEligible,
@@ -11,6 +12,7 @@ import {
   sendAligoSms,
 } from "@/lib/aligo";
 import {
+  ensureSheetColumnCapacity,
   getGoogleApiErrorDetails,
   getGoogleSheetsConfig,
   getSheetsClient,
@@ -31,7 +33,7 @@ const PHONE_PATTERN = /^010\d{7,8}$/;
 const ANSWER_COUNT = 9;
 const HEADER_ROW = 3;
 const FIRST_DATA_ROW = HEADER_ROW + 1;
-const SHEET_LAST_COLUMN = "AD";
+const SHEET_LAST_COLUMN = "AE";
 const isAligoSmsEnabled = process.env.ALIGO_SMS_ENABLED === "Y";
 const SHEET_HEADERS = [
   "접수일",
@@ -64,9 +66,12 @@ const SHEET_HEADERS = [
   "희망일정2 시간",
   "희망일정3 날짜",
   "희망일정3 시간",
+  "소속구분",
 ] as const;
 
 type SurveySubmission = {
+  formVersion?: number;
+  affiliation?: string;
   nickname: string;
   contact: string;
   consultationMethod: string;
@@ -90,6 +95,10 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   }
 
   const submission = payload as Partial<SurveySubmission>;
+  // Missing affiliation remains accepted for already-open older clients.
+  const affiliation = submission.affiliation;
+  if (submission.formVersion === 2 && !affiliation) return null;
+  if (affiliation !== undefined && !AFFILIATION_OPTIONS.some(option => option === affiliation)) return null;
   const nickname = submission.nickname?.trim();
   const contact = submission.contact?.trim();
   const consultationMethod = submission.consultationMethod?.trim();
@@ -226,6 +235,7 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   }
 
   return {
+    affiliation,
     nickname,
     contact,
     consultationMethod,
@@ -426,6 +436,7 @@ export async function POST(request: Request) {
       );
     }
 
+    await ensureSheetColumnCapacity(sheets, config.spreadsheetId, config.sheetName, SHEET_HEADERS.length);
     await ensureHeaderRow(sheets, config.spreadsheetId, config.sheetName);
     await sheets.spreadsheets.values.append({
       spreadsheetId: config.spreadsheetId,
@@ -458,6 +469,7 @@ export async function POST(request: Request) {
 
               return [schedule?.date ?? "", schedule?.time ?? ""];
             }).flat(),
+            payload.affiliation ?? "",
           ],
         ],
       },

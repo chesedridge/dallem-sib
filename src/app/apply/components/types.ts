@@ -11,6 +11,7 @@ export type ResultBand = {
 };
 
 export type RespondentInfo = {
+  affiliation: string;
   nickname: string;
   contact: string;
   consultationMethod: string;

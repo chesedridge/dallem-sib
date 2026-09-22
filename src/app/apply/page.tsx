@@ -48,6 +48,7 @@ export default function TestPage() {
   const isDebugMode = process.env.NODE_ENV !== "production";
   const [formStep, setFormStep] = useState<FormStep>("eligibility");
   const [info, setInfo] = useState<RespondentInfo>({
+    affiliation: "",
     nickname: "",
     contact: "",
     consultationMethod: "",
@@ -260,6 +261,7 @@ export default function TestPage() {
   };
 
   const buildDebugInfo = (): RespondentInfo => ({
+    affiliation: DEFAULT_DEBUG_INFO.affiliation,
     nickname: info.nickname.trim() || DEFAULT_DEBUG_INFO.nickname,
     contact: PHONE_PATTERN.test(info.contact.trim())
       ? info.contact.trim()
@@ -392,6 +394,10 @@ export default function TestPage() {
 
     const nextFieldErrors: RespondentInfoErrors = {};
 
+    if (!info.affiliation) {
+      nextFieldErrors.affiliation = "직장인 소속을 선택해주세요.";
+    }
+
     if (!info.nickname.trim()) {
       nextFieldErrors.nickname = "닉네임을 입력해주세요.";
     }
@@ -502,6 +508,8 @@ export default function TestPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          formVersion: 2,
+          affiliation: info.affiliation,
           nickname: info.nickname.trim(),
           contact: info.contact.trim(),
           consultationMethod: info.consultationMethod,
@@ -612,13 +620,15 @@ export default function TestPage() {
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
           <p className="mx-auto mb-2 max-w-[42rem] break-keep text-[15px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            경기도 거주 직장인 또는 경기도 소재 회사에 재직중인 직장인을 위한
+            경기도 거주 직장인 또는<br />
+            경기도 소재 회사에 재직중인 직장인을 위한
           </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
             멘탈케어 프로젝트
           </h1>
-          <p className="mx-auto max-w-[42rem] text-[15px] leading-7 text-[var(--color-text-body)] md:text-[17px] md:leading-8">
-            본 프로그램은 익명으로 참여하실 수 있으며, 전회차 무료로 진행됩니다.
+          <p className="mv-apply-note">
+            경기도 거주 또는 경기도 소재 회사 재직 여부와<br />
+            우울검사(PHQ-9) 결과에 따라 대상자 여부가 결정됩니다.
           </p>
         </header>
 
@@ -728,7 +738,7 @@ export default function TestPage() {
       </main>
 
       {shouldShowForm ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
+        <div className="fixed left-1/2 bottom-0 z-20 w-full max-w-[450px] -translate-x-1/2 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
           <button
             type="submit"
             form="phq-test-form"

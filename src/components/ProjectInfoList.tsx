@@ -9,7 +9,7 @@ const INFO_ITEMS = [
           경기도 소재 회사에 재직중인 직장인
         </span>
         <br />
-        <span className="whitespace-pre-wrap text-[12px] md:text-[14px]">
+        <span className="project-info-note">
           ※ <b>경기도와 관련된</b> 사업장이 있는 기업에 재직 중이라면 
           <b>대부분 참여 가능</b>합니다.
         </span>
@@ -22,7 +22,19 @@ const INFO_ITEMS = [
   },
   {
     label: "지원 내용",
-    value: "1인당 최대 4회 (무료상담)",
+    value: (
+      <>
+        기본 최대 4회 제공
+        <br />
+        <span className="project-info-sub">
+          (사후 검사 결과에 따라 추가 2회기 제공)
+        </span>
+      </>
+    ),
+  },
+  {
+    label: "비용",
+    value: "무료 제공",
   },
   {
     label: "참여 기간",
@@ -51,7 +63,7 @@ const INFO_ITEMS = [
         >
           달램(Dallem)<sup>↗</sup>
         </a>{" "}
-        또는 help@dallem.com
+        또는 <a href="mailto:help@dallem.com">help@dallem.com</a>
       </>
     ),
   },
@@ -59,19 +71,13 @@ const INFO_ITEMS = [
 
 export default function ProjectInfoList({ className }: { className: string }) {
   return (
-    <div
-      className={`${className} mx-auto flex flex-col gap-0 md:gap-4 max-w-150 overflow-hidden rounded-[20px] bg-bg-warm-light/90 px-8 py-4 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-210 md:rounded-3xl md:px-20 md:py-6`}
-    >
+    <dl className={`${className} project-info`}>
       {INFO_ITEMS.map((item) => (
-        <div key={item.label} className="flex items-start py-2 md:py-0.5">
-          <span className="text-left shrink-0 px-4 text-[14px] w-26 font-bold text-primary-strong md:px-5 md:text-[15px]">
-            {item.label}
-          </span>
-          <span className="text-left text-[14px] leading-5 text-text-body md:text-[16px] md:leading-6 whitespace-break-spaces">
-            {item.value}
-          </span>
+        <div key={item.label} className="project-info-row">
+          <dt>{item.label}</dt>
+          <dd>{item.value}</dd>
         </div>
       ))}
-    </div>
+    </dl>
   );
 }

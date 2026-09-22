@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
+import { isPostTiming, isValidAnswers } from "@/lib/survey-policy";
 import { ApplyQuestionStep } from "@/app/apply/components/ApplyQuestionStep";
 import {
   PHONE_PATTERN,
@@ -22,10 +23,20 @@ export default function PostPage() {
   const [info, setInfo] = useState<PostRespondentInfo>({
     nickname: "",
     contact: "",
+    timing: "",
   });
   const [answers, setAnswers] = useState<number[]>(
     Array.from({ length: QUESTIONS.length }, () => -1),
   );
+  const [matchToken, setMatchToken] = useState("");
+  const [preAnswers, setPreAnswers] = useState<number[]>([]);
+  const [modal, setModal] = useState<{ title: string; body: string } | null>(
+    null,
+  );
+  const modalRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (modal && !modalRef.current?.open) modalRef.current?.showModal();
+  }, [modal]);
   const [totalScore, setTotalScore] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<PostRespondentInfoErrors>({});
   const [showProgressPanel, setShowProgressPanel] = useState(false);
@@ -48,7 +59,9 @@ export default function PostPage() {
   const questionProgressLabel = `${QUESTIONS.length}개중 ${answeredCount}개 완료`;
   const primaryButtonLabel =
     formStep === "info"
-      ? "검사 시작하기"
+      ? isSubmitting
+        ? "기록 확인 중"
+        : "검사 시작하기"
       : isSubmitting
         ? "불러오는중"
         : "결과보기";
@@ -146,6 +159,8 @@ export default function PostPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          timing: info.timing,
+          matchToken,
           nickname: info.nickname.trim(),
           contact: info.contact.trim(),
           answers,
@@ -154,6 +169,7 @@ export default function PostPage() {
       });
       const responseBody = (await response.json().catch(() => null)) as {
         message?: string;
+        preAnswers?: number[];
       } | null;
 
       if (!response.ok) {
@@ -164,6 +180,13 @@ export default function PostPage() {
         return;
       }
 
+      if (!isValidAnswers(responseBody?.preAnswers)) {
+        setSubmitError(
+          "비교 결과를 불러오지 못했습니다. 담당자에게 문의해주세요.",
+        );
+        return;
+      }
+      setPreAnswers(responseBody.preAnswers);
       setTotalScore(score);
       setFormStep("result");
     } catch {
@@ -178,6 +201,7 @@ export default function PostPage() {
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
+    if (isSubmitting) return;
     if (formStep === "info") {
       const nextFieldErrors: PostRespondentInfoErrors = {};
 
@@ -192,13 +216,51 @@ export default function PostPage() {
           "010으로 시작하는 10~11자리 숫자를 입력해주세요.";
       }
 
+      if (!isPostTiming(info.timing))
+        nextFieldErrors.timing = "검사 진행 시기를 선택해주세요.";
       if (Object.keys(nextFieldErrors).length > 0) {
         setFieldErrors(nextFieldErrors);
+        setModal({
+          title: "입력하지 않았거나 확인이 필요한 항목이 있어요",
+          body: "닉네임, 연락처, 사후검사 결과 진행 시기를 모두 확인해 주세요.",
+        });
         return;
       }
 
       setFieldErrors({});
-      setFormStep("question");
+      setIsSubmitting(true);
+      setSubmitError("");
+      try {
+        const response = await fetch("/api/post-survey-match", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            nickname: info.nickname.trim(),
+            contact: info.contact.trim(),
+            timing: info.timing,
+          }),
+        });
+        const result = await response.json().catch(() => null);
+        if (!response.ok || typeof result?.matchToken !== "string") {
+          setModal({
+            title:
+              response.status === 404
+                ? "일치하는 정보가 없어요"
+                : "검사 기록을 확인하지 못했어요",
+            body: result?.message ?? "잠시 후 다시 시도해주세요.",
+          });
+          return;
+        }
+        setMatchToken(result.matchToken);
+        setFormStep("question");
+      } catch {
+        setModal({
+          title: "검사 기록을 확인하지 못했어요",
+          body: "네트워크 연결을 확인한 뒤 다시 시도해주세요.",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
 
@@ -259,11 +321,13 @@ export default function PostPage() {
           }`}
         >
           {formStep === "info" ? (
-            <PostInfoStep
-              fieldErrors={fieldErrors}
-              info={info}
-              onUpdateField={updateInfoField}
-            />
+            <fieldset disabled={isSubmitting}>
+              <PostInfoStep
+                fieldErrors={fieldErrors}
+                info={info}
+                onUpdateField={updateInfoField}
+              />
+            </fieldset>
           ) : formStep === "question" ? (
             <ApplyQuestionStep
               answers={answers}
@@ -277,7 +341,18 @@ export default function PostPage() {
               role="alert"
               className="mx-auto max-w-[36rem] rounded-[20px] border border-[var(--color-primary)] bg-primary-soft px-4 py-3 text-left text-sm font-medium text-[var(--color-primary-strong)]"
             >
-              {submitError}
+              <p>{submitError}</p>
+              <button
+                type="button"
+                className="mt-3 min-h-11 underline underline-offset-4"
+                onClick={() => {
+                  setFormStep("info");
+                  setMatchToken("");
+                  setSubmitError("");
+                }}
+              >
+                검사 시작 화면에서 다시 확인하기
+              </button>
             </div>
           ) : null}
 
@@ -301,12 +376,45 @@ export default function PostPage() {
             resultBadgeClass={resultBadgeClass}
             resultBand={resultBand}
             totalScore={totalScore}
+            preAnswers={preAnswers}
+            answers={answers}
+            timing={isPostTiming(info.timing) ? info.timing : "4"}
           />
         ) : null}
       </main>
 
+      <dialog
+        ref={modalRef}
+        className="survey-modal"
+        aria-labelledby="post-modal-title"
+        aria-describedby="post-modal-description"
+        onClose={() => setModal(null)}
+      >
+        <h2 id="post-modal-title" className="text-xl font-bold">
+          {modal?.title}
+        </h2>
+        <p
+          id="post-modal-description"
+          className="mt-4 text-sm leading-6 text-text-body"
+        >
+          {modal?.body}
+        </p>
+        <p className="mt-4 text-sm text-text-body">
+          문의{" "}
+          <a href="mailto:help@dallem.com" className="font-bold">
+            help@dallem.com
+          </a>
+        </p>
+        <button
+          type="button"
+          className="survey-primary mt-6"
+          onClick={() => modalRef.current?.close()}
+        >
+          확인
+        </button>
+      </dialog>
       {shouldShowForm ? (
-        <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
+        <div className="fixed left-1/2 bottom-0 z-20 w-full max-w-[450px] -translate-x-1/2 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
           <button
             type="submit"
             form="post-phq-test-form"

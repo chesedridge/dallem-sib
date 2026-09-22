@@ -40,7 +40,7 @@ export default function DataSection() {
             심리상담의 주요 성과
           </p>
           <div className="mx-auto max-w-[600px] overflow-hidden rounded-[20px] border border-border-soft bg-bg-white px-8 py-7 shadow-[0_2px_12px_rgba(240,135,119,0.08)] md:max-w-[840px] md:rounded-[24px] md:px-10 md:py-6">
-            <div className="w-fit mx-auto">
+            <div className="project-outcomes w-fit mx-auto">
               {RESULT_ITEMS.map((text) => (
                 <div
                   key={text}

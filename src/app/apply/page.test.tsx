@@ -38,3 +38,16 @@ it.each([0, 4, 6, 15, 20, 24])("routes ineligible total %i to the alternative su
   expect(screen.getByRole("link", { name: /달램톡과 대화하기/ })).toBeInTheDocument();
   expect(screen.queryByText("판정 결과")).not.toBeInTheDocument();
 });
+
+it("requires affiliation and privacy consent before completing the application", () => {
+  const { container } = render(<TestPage />);
+  fireEvent.click(screen.getByRole("button", {name:"네, 해당합니다"}));
+  fireEvent.click(screen.getByRole("button", {name:"시작하기"}));
+  [2,2,0,0,0,0,0,0,1].forEach((answer,index) => fireEvent.click(container.querySelector(`input[name="question-${index+1}"][value="${answer}"]`)!));
+  fireEvent.submit(container.querySelector("#phq-test-form")!);
+  fireEvent.click(screen.getByRole("button", {name:"상담 신청하기"}));
+  fireEvent.submit(container.querySelector("#phq-test-form")!);
+  expect(screen.getByRole("alert")).toHaveTextContent("직장인 소속을 선택해주세요.");
+  expect(screen.getByText("개인정보 수집 및 이용에 동의해주세요.")).toBeInTheDocument();
+  expect(screen.queryByText("신청이 정상적으로 접수되었습니다")).not.toBeInTheDocument();
+});

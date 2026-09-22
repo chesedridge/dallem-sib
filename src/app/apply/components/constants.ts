@@ -8,7 +8,7 @@ import type {
 export const INFO_FIELDS: InfoField[] = [
   {
     key: "nickname",
-    label: "닉네임 (또는 이름)",
+    label: "이름 (또는 닉네임)",
     type: "text",
     placeholder: "닉네임을 입력해주세요",
     autoComplete: "nickname",
@@ -98,6 +98,7 @@ export const DEFAULT_DEBUG_ANSWERS = Array.from(
 );
 
 export const DEFAULT_DEBUG_INFO: RespondentInfo = {
+  affiliation: "경기도에 거주하는 직장인입니다",
   nickname: "디버그 사용자",
   contact: "01012345678",
   consultationMethod: CONSULTATION_METHOD_OPTIONS[0],

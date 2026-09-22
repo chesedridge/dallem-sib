@@ -39,8 +39,7 @@ export default function HeroSection() {
           <p className="mt-7 max-w-[800px] text-[15px] leading-[1.55] tracking-[-0.02em] text-primary-strong md:mt-10 md:text-[26px] md:leading-[1.4]">
             <strong className="font-bold">경기도 거주 직장인</strong> 또는{" "}
             <strong className="font-bold">경기도 소재 회사 재직중</strong>이라면,
-            <br />1인당 4회{" "}
-            <strong className="font-bold">무료 심리상담</strong>을 받을 수
+            <br /><strong className="font-bold">무료로 심리상담</strong>을 받을 수
             있습니다.
           </p>
           <ProjectInfoList className="mt-7" />
