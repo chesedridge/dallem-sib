@@ -17,3 +17,9 @@ export function isValidAnswers(value: unknown): value is number[] {
 export function offersExtraSessions(score: number, timing: PostTiming) {
   return timing === "4" && Number.isInteger(score) && score >= 5 && score <= 27;
 }
+
+export const POST_SURVEY_ALREADY_COMPLETED = "POST_SURVEY_ALREADY_COMPLETED";
+export const POST_SURVEY_ALREADY_COMPLETED_TITLE = "이미 완료한 사후검사예요";
+export function postSurveyAlreadyCompletedMessage(timing: PostTiming) {
+  return `입력하신 연락처는 ${timing}회기 후 사후검사를 이미 완료했습니다. 같은 회기의 검사는 한 번만 진행할 수 있어요.`;
+}

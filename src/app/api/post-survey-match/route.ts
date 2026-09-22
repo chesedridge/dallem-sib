@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { getGoogleSheetsConfig, getSheetsClient } from "@/lib/google";
-import { createMatchToken, findPreSurveyRecord } from "@/lib/post-survey";
-import { isPostTiming } from "@/lib/survey-policy";
+import {
+  createMatchToken,
+  findPreSurveyRecord,
+  hasCompletedPostSurvey,
+} from "@/lib/post-survey";
+import {
+  isPostTiming,
+  POST_SURVEY_ALREADY_COMPLETED,
+  postSurveyAlreadyCompletedMessage,
+} from "@/lib/survey-policy";
 
 export const runtime = "nodejs";
 const headers = { "Cache-Control": "no-store" };
@@ -29,6 +37,22 @@ export async function POST(request: Request) {
       { status: 503, headers },
     );
   try {
+    if (
+      await hasCompletedPostSurvey(
+        sheets,
+        config.spreadsheetId,
+        body.contact,
+        body.timing,
+      )
+    ) {
+      return NextResponse.json(
+        {
+          code: POST_SURVEY_ALREADY_COMPLETED,
+          message: postSurveyAlreadyCompletedMessage(body.timing),
+        },
+        { status: 409, headers },
+      );
+    }
     const record = await findPreSurveyRecord(sheets, config, body.contact);
     if (!record)
       return NextResponse.json(

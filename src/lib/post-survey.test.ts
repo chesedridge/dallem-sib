@@ -1,5 +1,6 @@
 /** @jest-environment node */
 import {
+  hasCompletedPostSurvey,
   createMatchToken,
   readMatchToken,
   selectPreSurveyRecord,
@@ -97,4 +98,66 @@ it.each([
   [20, 20],
 ])("preserves the original band at score %i", (score, min) => {
   expect(findResultBand(score).min).toBe(min);
+});
+
+describe("completed post-survey lookup", () => {
+  function client(rows: unknown[][]) {
+    const get = jest.fn().mockResolvedValue({ data: { values: rows } });
+    return {
+      spreadsheets: { values: { get } },
+    } as unknown as import("./google").SheetsClient;
+  }
+  const row = (phone: unknown, timing?: unknown) => [
+    phone,
+    ...Array(11).fill(""),
+    timing,
+  ];
+  it.each(["01012345678", "010-1234-5678", "010 1234 5678", 1012345678])(
+    "normalizes saved phone %s",
+    async (phone) => {
+      expect(
+        await hasCompletedPostSurvey(
+          client([row(phone, "4회기 후")]),
+          "test",
+          "01012345678",
+          "4",
+        ),
+      ).toBe(true);
+    },
+  );
+  it.each([undefined, "", " ", "4", 4, "4회기 후"])(
+    "treats legacy/four timing %s as four sessions only",
+    async (timing) => {
+      const sheets = client([row("01012345678", timing)]);
+      expect(
+        await hasCompletedPostSurvey(sheets, "test", "01012345678", "4"),
+      ).toBe(true);
+      expect(
+        await hasCompletedPostSurvey(sheets, "test", "01012345678", "6"),
+      ).toBe(false);
+    },
+  );
+  it("restores the leading zero for legacy ten-digit phone numbers", async () => {
+    expect(
+      await hasCompletedPostSurvey(
+        client([row(101234567, "4회기 후")]),
+        "test",
+        "0101234567",
+        "4",
+      ),
+    ).toBe(true);
+  });
+  it("does not match another contact or an empty sheet", async () => {
+    expect(
+      await hasCompletedPostSurvey(
+        client([row("01099999999", "4회기 후")]),
+        "test",
+        "01012345678",
+        "4",
+      ),
+    ).toBe(false);
+    expect(
+      await hasCompletedPostSurvey(client([]), "test", "01012345678", "4"),
+    ).toBe(false);
+  });
 });

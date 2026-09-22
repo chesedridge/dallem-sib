@@ -26,7 +26,8 @@ type Match = {
 const normalizeContact = (value: unknown) => {
   const digits = String(value ?? "").replace(/\D/g, "");
   // Legacy numeric Sheets cells may have lost the leading zero.
-  return digits.startsWith("10") && digits.length === 10
+  return digits.startsWith("10") &&
+    (digits.length === 9 || digits.length === 10)
     ? `0${digits}`
     : digits;
 };
@@ -69,6 +70,34 @@ export async function findPreSurveyRecord(
     range: sheetRange(config.sheetName, "A4:V"),
   });
   return selectPreSurveyRecord(data.values ?? [], contact);
+}
+
+// Deliberately scoped to contact + timing, not nickname or the matched baseline.
+// Sheets has no atomic uniqueness constraint; overlapping submissions can still race.
+export async function hasCompletedPostSurvey(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  contact: string,
+  timing: PostTiming,
+): Promise<boolean> {
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: sheetRange("post-raw", "C2:O"),
+  });
+  const normalizedContact = normalizeContact(contact);
+  return (data.values ?? []).some((row) => {
+    if (!normalizedContact || normalizeContact(row[0]) !== normalizedContact)
+      return false;
+    const savedTiming = String(row[12] ?? "").replace(/\s/g, "");
+    // Before timing was collected, the post-survey was the four-session survey.
+    const normalizedTiming =
+      savedTiming === "" || savedTiming === "4" || savedTiming === "4회기후"
+        ? "4"
+        : savedTiming === "6" || savedTiming === "6회기후"
+          ? "6"
+          : null;
+    return normalizedTiming === timing;
+  });
 }
 
 function key(secret: string) {

@@ -1,6 +1,12 @@
 import { findResultBand } from "@/app/apply/components/constants";
-import { findPreSurveyRecord, readMatchToken } from "@/lib/post-survey";
 import {
+  findPreSurveyRecord,
+  readMatchToken,
+  hasCompletedPostSurvey,
+} from "@/lib/post-survey";
+import {
+  POST_SURVEY_ALREADY_COMPLETED,
+  postSurveyAlreadyCompletedMessage,
   isPostTiming,
   offersExtraSessions,
   type PostTiming,
@@ -128,8 +134,15 @@ async function ensureHeaderRow(sheets: SheetsClient, spreadsheetId: string) {
   const existingHeaders = data.values?.[0] ?? [];
   // Never relabel populated legacy columns: that would associate old values
   // with different fields. Existing sheets must remove these four columns first.
-  const retiredHeaders = ["사전기록ID", "사전검사일", "사전총점", "추가2회기대상"];
-  if (existingHeaders.some(header => retiredHeaders.includes(String(header)))) {
+  const retiredHeaders = [
+    "사전기록ID",
+    "사전검사일",
+    "사전총점",
+    "추가2회기대상",
+  ];
+  if (
+    existingHeaders.some((header) => retiredHeaders.includes(String(header)))
+  ) {
     throw new Error("POST_SURVEY_LEGACY_COLUMNS");
   }
 
@@ -230,7 +243,34 @@ export async function POST(request: Request) {
       payload.timing,
     );
     const scoreChange = payload.totalScore - preRecord.totalScore;
-    const signedScoreChange = scoreChange > 0 ? `+${scoreChange}` : String(scoreChange);
+    const signedScoreChange =
+      scoreChange > 0 ? `+${scoreChange}` : String(scoreChange);
+    let alreadyCompleted: boolean;
+    try {
+      alreadyCompleted = await hasCompletedPostSurvey(
+        sheets,
+        config.spreadsheetId,
+        payload.contact,
+        payload.timing,
+      );
+    } catch {
+      return NextResponse.json(
+        {
+          message:
+            "검사 기록 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
+        },
+        { status: 503, headers: { "Cache-Control": "no-store" } },
+      );
+    }
+    if (alreadyCompleted) {
+      return NextResponse.json(
+        {
+          code: POST_SURVEY_ALREADY_COMPLETED,
+          message: postSurveyAlreadyCompletedMessage(payload.timing),
+        },
+        { status: 409, headers: { "Cache-Control": "no-store" } },
+      );
+    }
     await ensureHeaderRow(sheets, config.spreadsheetId);
     await sheets.spreadsheets.values.append({
       spreadsheetId: config.spreadsheetId,
@@ -267,8 +307,17 @@ export async function POST(request: Request) {
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch (error) {
-    if (error instanceof Error && error.message === "POST_SURVEY_LEGACY_COLUMNS") {
-      return NextResponse.json({ message: "저장 시트의 이전 형식이 남아 있습니다. 담당자가 사전기록ID, 사전검사일, 사전총점, 추가2회기대상 열을 제거한 뒤 다시 시도해주세요." }, { status: 409 });
+    if (
+      error instanceof Error &&
+      error.message === "POST_SURVEY_LEGACY_COLUMNS"
+    ) {
+      return NextResponse.json(
+        {
+          message:
+            "저장 시트의 이전 형식이 남아 있습니다. 담당자가 사전기록ID, 사전검사일, 사전총점, 추가2회기대상 열을 제거한 뒤 다시 시도해주세요.",
+        },
+        { status: 409 },
+      );
     }
     const { status, message } = getGoogleApiErrorDetails(error);
 

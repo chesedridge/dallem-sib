@@ -47,17 +47,15 @@ beforeEach(() => {
   jest
     .mocked(getGoogleSheetsConfig)
     .mockReturnValue(config as ReturnType<typeof getGoogleSheetsConfig>);
-  jest
-    .mocked(getSheetsClient)
-    .mockReturnValue({
-      spreadsheets: {
-        values: {
-          get: jest.fn().mockResolvedValue({ data: { values: [] } }),
-          append,
-          update,
-        },
+  jest.mocked(getSheetsClient).mockReturnValue({
+    spreadsheets: {
+      values: {
+        get: jest.fn().mockResolvedValue({ data: { values: [] } }),
+        append,
+        update,
       },
-    } as unknown as ReturnType<typeof getSheetsClient>);
+    },
+  } as unknown as ReturnType<typeof getSheetsClient>);
   jest.mocked(getSpreadsheetSheetTitles).mockResolvedValue(["post-raw"]);
 });
 it.each([
@@ -120,10 +118,23 @@ it.each([
 it("does not relabel existing legacy values as new comparison fields", async () => {
   await POST(request(18));
   const currentHeaders = update.mock.calls[0][0].requestBody.values[0];
-  const oldHeaders = [...currentHeaders.slice(0, 15), "사전기록ID", "사전검사일", "사전총점", "추가2회기대상", ...currentHeaders.slice(15)];
-  jest.mocked(getSheetsClient).mockReturnValue({spreadsheets: {
-    values: {get: jest.fn().mockResolvedValue({data:{values:[oldHeaders]}}),append,update},
-  }} as unknown as ReturnType<typeof getSheetsClient>);
+  const oldHeaders = [
+    ...currentHeaders.slice(0, 15),
+    "사전기록ID",
+    "사전검사일",
+    "사전총점",
+    "추가2회기대상",
+    ...currentHeaders.slice(15),
+  ];
+  jest.mocked(getSheetsClient).mockReturnValue({
+    spreadsheets: {
+      values: {
+        get: jest.fn().mockResolvedValue({ data: { values: [oldHeaders] } }),
+        append,
+        update,
+      },
+    },
+  } as unknown as ReturnType<typeof getSheetsClient>);
   update.mockClear();
   append.mockClear();
   const response = await POST(request(18));
@@ -131,4 +142,106 @@ it("does not relabel existing legacy values as new comparison fields", async () 
   expect((await response.json()).message).toContain("이전 형식");
   expect(update).not.toHaveBeenCalled();
   expect(append).not.toHaveBeenCalled();
+});
+
+function completedRow(timing: string | undefined, contact = "01012345678") {
+  return [contact, ...Array(11).fill(""), timing];
+}
+function mockCompletedRows(rows: unknown[][]) {
+  jest.mocked(getSheetsClient).mockReturnValue({
+    spreadsheets: {
+      values: {
+        get: jest.fn().mockResolvedValue({ data: { values: rows } }),
+        append,
+        update,
+      },
+    },
+  } as unknown as ReturnType<typeof getSheetsClient>);
+}
+it.each(["4", "6"] as const)(
+  "blocks a saved %s-session result even with a new token and nickname",
+  async (timing) => {
+    mockCompletedRows([completedRow(`${timing}회기 후`)]);
+    const newRecord = {
+      ...record,
+      id: "new-baseline",
+      receivedAt: "2026-09-22",
+    };
+    const response = await POST(
+      request(18, timing, {
+        nickname: "changed",
+        matchToken: createMatchToken(
+          newRecord,
+          "01012345678",
+          timing,
+          "test-key",
+        ),
+      }),
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({
+      code: "POST_SURVEY_ALREADY_COMPLETED",
+    });
+    expect(append).not.toHaveBeenCalled();
+    expect(update).not.toHaveBeenCalled();
+  },
+);
+it.each([
+  ["4", "6"],
+  ["6", "4"],
+] as const)(
+  "allows %s-session submission with only a %s-session history",
+  async (timing, savedTiming) => {
+    mockCompletedRows([completedRow(`${savedTiming}회기 후`)]);
+    expect((await POST(request(18, timing))).status).toBe(200);
+    expect(append).toHaveBeenCalledTimes(1);
+  },
+);
+it("blocks legacy requests against old blank-timing records", async () => {
+  // First read is the pre-survey used by old clients; second is the post history.
+  const get = jest
+    .fn()
+    .mockResolvedValueOnce({
+      data: {
+        values: [
+          [
+            "2026-09-01",
+            "동의",
+            "name",
+            "01012345678",
+            ...Array(8).fill(""),
+            ...Array(9).fill(2),
+            18,
+          ],
+        ],
+      },
+    })
+    .mockResolvedValueOnce({ data: { values: [completedRow(undefined)] } });
+  jest
+    .mocked(getSheetsClient)
+    .mockReturnValue({
+      spreadsheets: { values: { get, append, update } },
+    } as unknown as ReturnType<typeof getSheetsClient>);
+  expect(
+    (await POST(request(18, "4", { timing: undefined, matchToken: undefined })))
+      .status,
+  ).toBe(409);
+  expect(append).not.toHaveBeenCalled();
+  expect(update).not.toHaveBeenCalled();
+});
+it("does not write when post history cannot be read", async () => {
+  jest
+    .mocked(getSheetsClient)
+    .mockReturnValue({
+      spreadsheets: {
+        values: {
+          get: jest.fn().mockRejectedValue(new Error("unavailable")),
+          append,
+          update,
+        },
+      },
+    } as unknown as ReturnType<typeof getSheetsClient>);
+  expect((await POST(request(18))).status).toBe(503);
+  expect(append).not.toHaveBeenCalled();
+  expect(update).not.toHaveBeenCalled();
 });

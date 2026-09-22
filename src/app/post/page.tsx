@@ -2,7 +2,12 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
-import { isPostTiming, isValidAnswers } from "@/lib/survey-policy";
+import {
+  isPostTiming,
+  isValidAnswers,
+  POST_SURVEY_ALREADY_COMPLETED,
+  POST_SURVEY_ALREADY_COMPLETED_TITLE,
+} from "@/lib/survey-policy";
 import { ApplyQuestionStep } from "@/app/apply/components/ApplyQuestionStep";
 import {
   PHONE_PATTERN,
@@ -168,10 +173,32 @@ export default function PostPage() {
         }),
       });
       const responseBody = (await response.json().catch(() => null)) as {
+        code?: string;
         message?: string;
         preAnswers?: number[];
       } | null;
 
+      if (
+        response.status === 409 &&
+        responseBody?.code === POST_SURVEY_ALREADY_COMPLETED
+      ) {
+        setFormStep("info");
+        setAnswers(Array.from({ length: QUESTIONS.length }, () => -1));
+        setMatchToken("");
+        setPreAnswers([]);
+        setTotalScore(null);
+        setInfo((previous) => ({ ...previous, timing: "" }));
+        setFieldErrors({});
+        setSubmitError("");
+        setModal({
+          title: POST_SURVEY_ALREADY_COMPLETED_TITLE,
+          body:
+            responseBody.message ??
+            "같은 회기의 검사는 한 번만 진행할 수 있어요.",
+        });
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
       if (!response.ok) {
         setSubmitError(
           responseBody?.message ??
@@ -244,9 +271,12 @@ export default function PostPage() {
         if (!response.ok || typeof result?.matchToken !== "string") {
           setModal({
             title:
-              response.status === 404
-                ? "일치하는 정보가 없어요"
-                : "검사 기록을 확인하지 못했어요",
+              response.status === 409 &&
+              result?.code === POST_SURVEY_ALREADY_COMPLETED
+                ? POST_SURVEY_ALREADY_COMPLETED_TITLE
+                : response.status === 404
+                  ? "일치하는 정보가 없어요"
+                  : "검사 기록을 확인하지 못했어요",
             body: result?.message ?? "잠시 후 다시 시도해주세요.",
           });
           return;
