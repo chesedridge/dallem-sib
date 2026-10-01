@@ -531,7 +531,7 @@ export default function TestPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-bg-warm-light pb-28 md:pb-20 ${formStep === "question" ? "pt-6 md:pt-10" : "pt-14 md:pt-20"}`}>
+    <div className="min-h-screen bg-bg-warm-light pb-28 md:pb-20">
       {isDebugMode ? (
         <details className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
           <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
@@ -560,30 +560,23 @@ export default function TestPage() {
       ) : null}
 
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
-        <header className="pt-3 text-center md:pt-5">
-          {formStep === "question" ? (
-            <p className="mb-2 text-sm font-bold text-primary-strong">사전검사</p>
-          ) : (
-            <p className="mx-auto mb-2 max-w-[42rem] break-keep text-[15px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-              경기도 거주 직장인 또는<br />
-              경기도 소재 회사에 재직중인 직장인을 위한
-            </p>
-          )}
+        <header className="-mx-5 bg-bg-warm px-5 pt-6 pb-5 text-center sm:-mx-7 sm:px-7 md:pt-10 lg:-mx-10 lg:px-10">
+          <p className="mx-auto mb-2 max-w-[42rem] break-keep text-[15px] font-normal tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
+            <strong className="font-bold">경기도 거주 직장인</strong> 또는<br />
+            <strong className="font-bold">경기도 소재 회사에 재직중인 직장인</strong>을 위한
+          </p>
           <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
             멘탈케어 프로젝트
           </h1>
-          {formStep !== "question" ? (
+          {formStep === "question" ? (
+            <p className="mv-apply-stage-label">사전검사 - 우울검사(PHQ-9)</p>
+          ) : (
             <p className="mv-apply-note">
               경기도 거주 또는 경기도 소재 회사 재직 여부와<br />
               우울검사(PHQ-9) 결과에 따라 대상자 여부가 결정됩니다.
             </p>
-          ) : null}
+          )}
         </header>
-
-        <div
-          aria-hidden="true"
-          className={`${formStep === "question" ? "mt-6" : "mt-10"} -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden`}
-        />
 
         {formStep === "eligibility" ? (
           <ApplyEligibilityStep
@@ -602,7 +595,7 @@ export default function TestPage() {
         <form
           id="phq-test-form"
           onSubmit={submit}
-          className={`space-y-8 ${formStep === "question" ? "mt-6 md:mt-8" : "mt-8 md:mt-16"} ${
+          className={`mt-6 space-y-8 ${formStep === "question" ? "md:mt-8" : "md:mt-16"} ${
             shouldShowForm ? "" : "hidden"
           }`}
         >

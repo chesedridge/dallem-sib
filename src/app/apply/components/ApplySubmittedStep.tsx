@@ -2,9 +2,9 @@
 
 export function ApplySubmittedStep() {
   return (
-    <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-border-soft md:p-14">
+    <section className="mt-6 text-center md:mt-16 md:rounded-[36px] md:border md:border-border-soft md:bg-bg-white md:p-14">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-text-dark md:text-3xl">
+        <h2 className="mb-4 text-balance text-2xl font-extrabold tracking-[-0.03em] break-keep text-text-dark md:text-3xl">
           신청이 정상적으로 접수되었습니다
         </h2>
         <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-text-body md:text-[18px] md:leading-8">

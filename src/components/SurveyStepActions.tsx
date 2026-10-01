@@ -16,7 +16,7 @@ export function SurveyStepActions({
   isPreviousDisabled,
 }: SurveyStepActionsProps) {
   return (
-    <div className="fixed bottom-0 left-1/2 z-20 w-full max-w-[450px] -translate-x-1/2 border-t border-border-soft bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:static md:mx-auto md:mt-8 md:max-w-[48rem] md:translate-x-0 md:border-0 md:bg-transparent md:backdrop-blur-none">
+    <div className="fixed bottom-0 left-1/2 z-20 w-full max-w-[450px] -translate-x-1/2 bg-[linear-gradient(to_bottom,transparent,var(--color-bg-warm-light)_16px)] p-4 md:static md:mx-auto md:mt-8 md:max-w-[48rem] md:translate-x-0 md:bg-none md:bg-transparent">
       <div className="flex gap-3">
         {onPrevious ? (
           <button

@@ -6,9 +6,9 @@ type ApplyIneligibleStepProps = {
 
 export function ApplyIneligibleStep({ onRetry }: ApplyIneligibleStepProps) {
   return (
-    <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
+    <section className="mt-6 text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:bg-bg-white md:p-14">
       <div className="mx-auto max-w-3xl text-center">
-        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
+        <h2 className="mb-4 text-balance text-2xl font-extrabold tracking-[-0.03em] break-keep text-[var(--color-text-dark)] md:text-3xl">
           이번 프로젝트의 대상자가 아닙니다
         </h2>
         <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">

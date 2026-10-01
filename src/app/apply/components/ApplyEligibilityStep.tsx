@@ -10,7 +10,7 @@ export function ApplyEligibilityStep({
   onIneligible,
 }: ApplyEligibilityStepProps) {
   return (
-    <section className="mx-auto mt-8 max-w-[48rem] rounded-[28px] border border-border-soft bg-bg-white px-5 py-7 text-center shadow-[0_12px_40px_rgba(128,86,79,0.04)] sm:px-8 md:mt-10 md:rounded-[32px] md:p-10">
+    <section className="mx-auto mt-6 max-w-[48rem] text-center md:mt-10 md:rounded-[32px] md:border md:border-border-soft md:bg-bg-white md:p-10 md:shadow-[0_12px_40px_rgba(128,86,79,0.04)]">
       <div className="mx-auto max-w-3xl text-center">
         <h2 className="mb-3 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           참여 대상 확인

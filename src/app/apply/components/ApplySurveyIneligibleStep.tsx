@@ -2,7 +2,7 @@ export function ApplySurveyIneligibleStep() {
   return (
     <section
       aria-labelledby="survey-ineligible-title"
-      className="mt-8 bg-bg-white md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14"
+      className="mt-6 md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:bg-bg-white md:p-14"
     >
       <div className="mx-auto max-w-3xl">
         <h2

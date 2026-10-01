@@ -21,7 +21,7 @@ export function ApplyResultStep({
   }
 
   return (
-    <section className="mt-8 bg-bg-white text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
+    <section className="mt-6 text-center md:mt-16 md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:bg-bg-white md:p-14">
       <div className="mx-auto max-w-3xl text-center">
         <p
           className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${resultBadgeClass}`}

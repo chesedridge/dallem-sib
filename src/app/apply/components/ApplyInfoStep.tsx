@@ -358,8 +358,8 @@ export function ApplyInfoStep({
   );
 
   return (
-    <section className="apply-info-card bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
-      <div className="mx-auto mb-12 max-w-3xl text-center">
+    <section className="mx-auto max-w-[48rem] text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:bg-white md:p-14 md:shadow-[0_12px_40px_rgba(128,86,79,0.06)]">
+      <div className="mx-auto mb-8 max-w-3xl text-center md:mb-12">
         <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           응답자 정보
         </h2>
@@ -367,7 +367,7 @@ export function ApplyInfoStep({
           대상자분에게 상담 예약을 위해 담당자가 직접 연락 드릴 예정입니다.
         </p>
       </div>
-      <div className="space-y-9">
+      <div className="space-y-8 md:space-y-9">
         <fieldset className="mx-auto max-w-[36rem] space-y-3 text-left" aria-describedby={fieldErrors.affiliation ? "affiliation-error" : undefined}>
           <legend className="text-[15px] font-semibold md:text-[17px]">소속확인</legend>
           <p className="text-sm text-text-sub">직장인 소속을 선택해주세요.</p>

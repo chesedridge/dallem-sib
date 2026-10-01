@@ -841,17 +841,20 @@ a {
 .project-info-sub { font-size:12.5px; color:var(--color-text-sub); }
 .project-info a { color:var(--color-primary-strong); font-weight:700; }
 @container (max-width: 399px) { .project-info-row { grid-template-columns:1fr; gap:4px; } }
-.mv-apply-note {
+.mv-apply-note,
+.mv-apply-stage-label {
   margin: 14px auto 0;
   max-width: 42rem;
-  padding: 12px 14px;
   font-size: 13.5px;
   line-height: 21px;
   letter-spacing: -0.02em;
   color: #9a6a63;
+  word-break: keep-all;
+}
+.mv-apply-note {
+  padding: 12px 14px;
   background: rgba(240, 135, 119, 0.1);
   border-radius: 12px;
-  word-break: keep-all;
 }
 .survey-intro { max-width:48rem; margin-inline:auto; }
 .survey-primary { display:block; width:100%; border:0; border-radius:999px; padding:16px 24px; background:var(--color-primary); color:white; font-size:16px; font-weight:700; cursor:pointer; }
@@ -862,30 +865,27 @@ a {
 .survey-choice input { width:18px; height:18px; flex-shrink:0; accent-color:var(--color-primary-strong); }
 .apply-info-card { margin-inline:auto; max-width:48rem; padding:26px 18px; border:1px solid var(--color-border-soft); border-radius:28px; background:#fff; box-shadow:0 12px 40px rgba(128,86,79,.06); }
 .mv-start-title {
-  margin-top: 26px;
+  margin-top: 24px;
   text-align: center;
-  font-size: 26px;
+  font-size: 24px;
   font-weight: 800;
-  line-height: 1.32;
-  letter-spacing: -0.04em;
+  line-height: 32px;
+  letter-spacing: -0.03em;
   color: var(--color-text-dark);
 }
 .mv-start-card {
-  margin: 22px auto 0;
+  margin: 12px auto 0;
   max-width: 48rem;
-  padding: 24px 18px;
-  background: #fff;
-  border: 1px solid var(--color-border-soft);
-  border-radius: 28px;
-  box-shadow: 0 12px 40px rgba(128, 86, 79, 0.06);
 }
 .mv-start-label {
-  margin-bottom: 20px;
+  margin-bottom: 12px;
   text-align: center;
   font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--color-primary-strong);
+  font-weight: 400;
+  line-height: 28px;
+  color: var(--color-text-body);
+  white-space: pre-line;
+  word-break: keep-all;
 }
 .mv-start-list { list-style: none; margin: 0; padding: 0; }
 .mv-start-list li {
@@ -909,33 +909,30 @@ a {
 .mv-start-icon svg { width: 23px; height: 23px; }
 .mv-start-list strong {
   display: block;
-  font-size: 15.5px;
-  font-weight: 700;
-  line-height: 22px;
-  letter-spacing: -0.02em;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 24px;
   color: var(--color-text-dark);
 }
 .mv-start-desc {
   display: block;
   margin-top: 3px;
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 400;
-  line-height: 20px;
-  letter-spacing: -0.02em;
+  line-height: 28px;
   color: var(--color-text-sub);
 }
 .mv-start-note {
   margin-top: 18px;
   padding: 14px 12px;
   text-align: center;
-  font-size: 13px;
-  line-height: 20px;
-  letter-spacing: -0.02em;
+  font-size: 14px;
+  line-height: 24px;
   color: var(--color-primary-strong);
   background: rgba(240, 135, 119, 0.1);
   border-radius: 16px;
 }
-.mv-start-cta { margin: 24px auto 0; max-width: 32rem; }
+.mv-start-cta { margin: 24px auto 0; max-width: 32rem; font-weight:600; }
 
 .post-result .card{
   background:#fff;border:1px solid var(--color-border-soft);border-radius:26px;
@@ -1017,8 +1014,16 @@ a {
 @container (min-width: 768px) {
   .project-info { padding:8px 30px; } .project-info-row { grid-template-columns:90px 1fr; }
   .project-info dd { font-size:16px; } .project-info dt { font-size:15px; }
-  .mv-start-title { font-size:32px; margin-top:40px; }
-  .mv-start-card { padding:32px; } .mv-start-list { max-width:32rem; margin:auto; }
+  .mv-start-title { font-size:30px; line-height:36px; margin-top:40px; }
+  .mv-start-label { font-size:16px; }
+  .mv-start-card {
+    padding:32px;
+    background:#fff;
+    border:1px solid var(--color-border-soft);
+    border-radius:28px;
+    box-shadow:0 12px 40px rgba(128,86,79,.06);
+  }
+  .mv-start-list { max-width:32rem; margin:auto; }
   .post-result .card { padding:40px; } .post-result .band-now { font-size:26px; }
   .post-result .lede, .post-result .explain { font-size:16px; line-height:1.8; }
   .post-result .compare { padding:28px; } .post-result .bars { max-width:380px; margin-inline:auto; }
