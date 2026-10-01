@@ -64,9 +64,7 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
-    if (i < 9) fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
-  fireEvent.submit(container.querySelector("#post-phq-test-form")!);
   await screen.findByRole("heading", { name: "이미 완료한 사후검사예요" });
   expect(screen.getByLabelText("닉네임 (또는 이름)")).toHaveValue("test user");
   expect(screen.getByLabelText("연락처")).toHaveValue("01012345678");
@@ -81,16 +79,14 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
   expect(
     container.querySelectorAll('input[type="radio"]:checked'),
   ).toHaveLength(0);
+  fetchMock.mockResolvedValueOnce(
+    response(200, { preAnswers: Array(9).fill(2) }),
+  );
   for (let i = 1; i <= 9; i++) {
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
-    if (i < 9) fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
-  fetchMock.mockResolvedValueOnce(
-    response(200, { preAnswers: Array(9).fill(2) }),
-  );
-  fireEvent.submit(container.querySelector("#post-phq-test-form")!);
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
   const payload = JSON.parse(fetchMock.mock.calls[3][1].body);
   expect(payload).toMatchObject({ timing: "6", matchToken: "second-token" });
@@ -109,7 +105,7 @@ it("does not start a survey when history lookup fails", async () => {
 });
 
 
-it("navigates one post-survey question at a time and saves all answers only at the last step", async () => {
+it("advances on selection and saves every answer including the last selection only after the final question", async () => {
   fetchMock.mockResolvedValueOnce(response(200, { matchToken: "test-token" }));
   const { container } = render(<PostPage />);
   enterInfo(container);
@@ -120,33 +116,59 @@ it("navigates one post-survey question at a time and saves all answers only at t
   expect(fetchMock).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
   fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
-  fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[2] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "이전" }));
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   expect(screen.getByRole("radio", { name: "없음 0점" })).toBeChecked();
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
-  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("radio", { name: "7~12일 2점" })).toBeChecked();
-  fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
   for (let index = 2; index < 8; index++) {
     fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
-    fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
   expect(fetchMock).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("button", { name: "결과보기" })).toBeDisabled();
-  fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
   let resolveSave!: (value: ReturnType<typeof response>) => void;
   fetchMock.mockImplementationOnce(() => new Promise(resolve => { resolveSave = resolve; }));
-  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
+  fireEvent.click(screen.getByRole("radio", { name: "거의 매일 3점" }));
   expect(screen.getByRole("button", { name: "불러오는중" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "이전" })).toBeDisabled();
   expect(screen.getAllByRole("radio").every(radio => radio.hasAttribute("disabled") || radio.closest("fieldset[disabled]"))).toBe(true);
+  fireEvent.submit(container.querySelector("#post-phq-test-form")!);
+  expect(fetchMock).toHaveBeenCalledTimes(2);
   expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
-    answers: [1, 2, 0, 0, 0, 0, 0, 0, 0],
-    totalScore: 3,
+    answers: [1, 2, 0, 0, 0, 0, 0, 0, 3],
+    totalScore: 6,
     timing: "4",
     matchToken: "test-token",
   });
   resolveSave(response(200, { preAnswers: Array(9).fill(1) }));
   await screen.findByText("검사 완료 · 4회기 후");
+});
+
+it("keeps the final answer after a save failure and retries by selecting it again", async () => {
+  fetchMock
+    .mockResolvedValueOnce(response(200, { matchToken: "test-token" }))
+    .mockResolvedValueOnce(response(503, { message: "잠시 후 다시 시도해주세요." }));
+  const { container } = render(<PostPage />);
+  enterInfo(container);
+  await screen.findByRole("group", { name: QUESTIONS[0] });
+  for (let index = 0; index < 8; index++) {
+    fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+  }
+  fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  await screen.findByRole("alert");
+  expect(screen.getByRole("group", { name: QUESTIONS[8] })).toBeInTheDocument();
+  expect(screen.getByRole("radio", { name: "2~6일 1점" })).toBeChecked();
+  expect(screen.getByRole("button", { name: "결과보기" })).toBeEnabled();
+  fetchMock.mockResolvedValueOnce(response(200, { preAnswers: Array(9).fill(1) }));
+  fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  await screen.findByText("검사 완료 · 4회기 후");
+  expect(fetchMock).toHaveBeenCalledTimes(3);
+  expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toMatchObject({
+    answers: [0, 0, 0, 0, 0, 0, 0, 0, 1],
+    totalScore: 1,
+  });
 });

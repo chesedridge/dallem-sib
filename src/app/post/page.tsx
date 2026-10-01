@@ -107,17 +107,8 @@ export default function PostPage() {
     setSubmitError("");
   };
 
-  const updateAnswer = (index: number, score: number) => {
-    setAnswers((previousAnswers) => {
-      const nextAnswers = [...previousAnswers];
-      nextAnswers[index] = score;
-      return nextAnswers;
-    });
-    setSubmitError("");
-  };
-
-  const submitPostSurvey = async () => {
-    const score = answers.reduce((sum, answer) => sum + answer, 0);
+  const submitPostSurvey = async (nextAnswers: number[]) => {
+    const score = nextAnswers.reduce((sum, answer) => sum + answer, 0);
 
     try {
       setIsSubmitting(true);
@@ -133,7 +124,7 @@ export default function PostPage() {
           matchToken,
           nickname: info.nickname.trim(),
           contact: info.contact.trim(),
-          answers,
+          answers: nextAnswers,
           totalScore: score,
         }),
       });
@@ -189,6 +180,26 @@ export default function PostPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const advanceQuestion = async (nextAnswers: number[]) => {
+    if (isSubmitting || nextAnswers[questionIndex] < 0) return;
+    if (!isLastQuestion) {
+      setQuestionIndex(questionIndex + 1);
+      return;
+    }
+    if (!isValidAnswers(nextAnswers)) return;
+
+    await submitPostSurvey(nextAnswers);
+  };
+
+  const updateAnswer = (index: number, score: number) => {
+    if (formStep !== "question" || index !== questionIndex || isSubmitting) return;
+    const nextAnswers = [...answers];
+    nextAnswers[index] = score;
+    setAnswers(nextAnswers);
+    setSubmitError("");
+    void advanceQuestion(nextAnswers);
   };
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
@@ -261,16 +272,7 @@ export default function PostPage() {
       return;
     }
 
-    if (!isCurrentQuestionAnswered) return;
-    if (!isLastQuestion) {
-      setQuestionIndex((index) => index + 1);
-      return;
-    }
-    if (!isQuestionStepComplete || isSubmitting) {
-      return;
-    }
-
-    await submitPostSurvey();
+    await advanceQuestion(answers);
   };
 
   return (

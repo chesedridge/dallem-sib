@@ -218,12 +218,26 @@ export default function TestPage() {
     setSubmitError("");
   };
 
+  const advanceQuestion = (nextAnswers: number[]) => {
+    if (nextAnswers[questionIndex] < 0) return;
+    if (!isLastQuestion) {
+      setQuestionIndex(questionIndex + 1);
+      return;
+    }
+    if (nextAnswers.some((answer) => answer < 0)) return;
+
+    setFieldErrors({});
+    setSubmitError("");
+    setTotalScore(nextAnswers.reduce((sum, answer) => sum + answer, 0));
+    setFormStep("result");
+  };
+
   const updateAnswer = (index: number, score: number) => {
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[index] = score;
-      return next;
-    });
+    if (formStep !== "question" || index !== questionIndex || isSubmitting) return;
+    const nextAnswers = [...answers];
+    nextAnswers[index] = score;
+    setAnswers(nextAnswers);
+    advanceQuestion(nextAnswers);
   };
 
   const buildDebugInfo = (): RespondentInfo => ({
@@ -342,19 +356,7 @@ export default function TestPage() {
     event.preventDefault();
 
     if (formStep === "question") {
-      if (!isCurrentQuestionAnswered) return;
-      if (!isLastQuestion) {
-        setQuestionIndex((index) => index + 1);
-        return;
-      }
-      if (!isQuestionStepComplete) {
-        return;
-      }
-
-      setFieldErrors({});
-      setSubmitError("");
-      setTotalScore(answers.reduce((acc, current) => acc + current, 0));
-      setFormStep("result");
+      advanceQuestion(answers);
       return;
     }
 

@@ -46,27 +46,32 @@ export function ApplyQuestionStep({
           aria-valuemax={QUESTIONS.length}
           aria-valuenow={questionIndex + 1}
           aria-valuetext={`${QUESTIONS.length}개 중 ${questionIndex + 1}번 문항`}
-          className="grid grid-cols-9 gap-1.5"
+          className="grid h-5 grid-cols-9 items-center gap-1.5"
         >
           {QUESTIONS.map((item, index) => (
             <span
               key={item}
-              className={`h-1.5 rounded-full ${
+              className={`rounded-full ${
                 index === questionIndex
-                  ? "bg-primary-strong"
+                  ? "h-2.5 bg-primary-strong ring-1 ring-primary-strong/30 ring-offset-2 ring-offset-bg-warm-light"
                   : answers[index] >= 0
-                    ? "bg-primary"
-                    : "bg-bg-gray"
+                    ? "h-1.5 bg-primary"
+                    : "h-1.5 bg-bg-gray"
               }`}
             />
           ))}
         </div>
       </div>
 
-      <p id="question-instruction" className="mb-5 text-sm leading-6 break-keep text-text-sub">
+      <p id="question-instruction" className="mb-2 text-sm leading-6 break-keep text-text-sub">
         지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
       </p>
-      <fieldset key={questionIndex} aria-describedby="question-instruction">
+      <p id="question-navigation-hint" className="mb-5 text-xs leading-5 text-text-sub">
+        {questionIndex === QUESTIONS.length - 1
+          ? "답변을 선택하면 검사 결과로 넘어갑니다."
+          : "답변을 선택하면 다음 문항으로 넘어갑니다."}
+      </p>
+      <fieldset key={questionIndex} aria-describedby="question-instruction question-navigation-hint">
         <legend className="mb-6 w-full min-h-[84px] text-[20px] font-bold leading-8 tracking-[-0.02em] break-keep text-text-dark md:text-2xl">
           {question}
         </legend>
@@ -90,6 +95,9 @@ export function ApplyQuestionStep({
                     value={option.score}
                     checked={selected}
                     onChange={() => onAnswerChange(questionIndex, option.score)}
+                    onClick={() => {
+                      if (selected) onAnswerChange(questionIndex, option.score);
+                    }}
                     className="size-[18px] shrink-0 accent-primary-strong"
                   />
                   {option.label}
