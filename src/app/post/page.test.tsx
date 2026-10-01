@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import PostPage from "./page";
+import { QUESTIONS } from "@/app/apply/components/constants";
 
 const fetchMock = jest.fn();
 const duplicate = {
@@ -49,7 +50,7 @@ it("keeps entered information when the start check finds a duplicate", async () 
   expect(screen.getByLabelText("4회기 후 진행")).toBeChecked();
   expect(screen.getByLabelText("연락처")).toHaveValue("01012345678");
   expect(
-    screen.queryByRole("heading", { name: "문항응답" }),
+    screen.queryByRole("heading", { name: /^문항응답/ }),
   ).not.toBeInTheDocument();
 });
 it("clears answers, token and timing after a duplicate discovered at save, then allows the other timing", async () => {
@@ -58,11 +59,13 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
     .mockResolvedValueOnce(response(409, duplicate));
   const { container } = render(<PostPage />);
   enterInfo(container);
-  await screen.findByRole("heading", { name: "문항응답" });
-  for (let i = 1; i <= 9; i++)
+  await screen.findByRole("heading", { name: /^문항응답/ });
+  for (let i = 1; i <= 9; i++) {
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
+    if (i < 9) fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  }
   fireEvent.submit(container.querySelector("#post-phq-test-form")!);
   await screen.findByRole("heading", { name: "이미 완료한 사후검사예요" });
   expect(screen.getByLabelText("닉네임 (또는 이름)")).toHaveValue("test user");
@@ -74,14 +77,16 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
     response(200, { matchToken: "second-token" }),
   );
   enterInfo(container, "6");
-  await screen.findByRole("heading", { name: "문항응답" });
+  await screen.findByRole("heading", { name: /^문항응답/ });
   expect(
     container.querySelectorAll('input[type="radio"]:checked'),
   ).toHaveLength(0);
-  for (let i = 1; i <= 9; i++)
+  for (let i = 1; i <= 9; i++) {
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
+    if (i < 9) fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  }
   fetchMock.mockResolvedValueOnce(
     response(200, { preAnswers: Array(9).fill(2) }),
   );
@@ -99,6 +104,49 @@ it("does not start a survey when history lookup fails", async () => {
   enterInfo(container);
   await screen.findByRole("heading", { name: "검사 기록을 확인하지 못했어요" });
   expect(
-    screen.queryByRole("heading", { name: "문항응답" }),
+    screen.queryByRole("heading", { name: /^문항응답/ }),
   ).not.toBeInTheDocument();
+});
+
+
+it("navigates one post-survey question at a time and saves all answers only at the last step", async () => {
+  fetchMock.mockResolvedValueOnce(response(200, { matchToken: "test-token" }));
+  const { container } = render(<PostPage />);
+  enterInfo(container);
+  await screen.findByRole("group", { name: QUESTIONS[0] });
+  expect(screen.getAllByRole("radio")).toHaveLength(4);
+  expect(screen.getByRole("button", { name: "다음" })).toBeDisabled();
+  fireEvent.submit(container.querySelector("#post-phq-test-form")!);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+  fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  fireEvent.click(screen.getByRole("button", { name: "이전" }));
+  expect(screen.getByRole("radio", { name: "없음 0점" })).toBeChecked();
+  fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  expect(screen.getByRole("radio", { name: "7~12일 2점" })).toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  for (let index = 2; index < 8; index++) {
+    fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
+  }
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("button", { name: "결과보기" })).toBeDisabled();
+  fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+  let resolveSave!: (value: ReturnType<typeof response>) => void;
+  fetchMock.mockImplementationOnce(() => new Promise(resolve => { resolveSave = resolve; }));
+  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
+  expect(screen.getByRole("button", { name: "불러오는중" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "이전" })).toBeDisabled();
+  expect(screen.getAllByRole("radio").every(radio => radio.hasAttribute("disabled") || radio.closest("fieldset[disabled]"))).toBe(true);
+  expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toMatchObject({
+    answers: [1, 2, 0, 0, 0, 0, 0, 0, 0],
+    totalScore: 3,
+    timing: "4",
+    matchToken: "test-token",
+  });
+  resolveSave(response(200, { preAnswers: Array(9).fill(1) }));
+  await screen.findByText("검사 완료 · 4회기 후");
 });

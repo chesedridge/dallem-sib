@@ -1,88 +1,111 @@
 "use client";
 
-import type { RefObject } from "react";
+import { useEffect, useRef } from "react";
 
 import { ANSWER_OPTIONS, QUESTIONS } from "./constants";
 
 type ApplyQuestionStepProps = {
   answers: number[];
+  questionIndex: number;
   onAnswerChange: (index: number, score: number) => void;
-  sectionRef: RefObject<HTMLElement | null>;
 };
 
 export function ApplyQuestionStep({
   answers,
+  questionIndex,
   onAnswerChange,
-  sectionRef,
 }: ApplyQuestionStepProps) {
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const question = QUESTIONS[questionIndex];
+
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, [questionIndex]);
+
   return (
-    <section
-      ref={sectionRef}
-      className="bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14"
-    >
-      <div className="mx-auto mb-12 max-w-3xl text-center">
-        <h2 className="mb-4 text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
-          문항응답
-        </h2>
-        <p className="text-[15px] leading-7 whitespace-pre-line break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-          지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
-        </p>
+    <section className="mx-auto max-w-[48rem] text-left md:rounded-[36px] md:border md:border-border-soft md:bg-white md:p-10 md:shadow-[0_12px_40px_rgba(128,86,79,0.04)]">
+      <div className="mb-6">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h2
+            ref={headingRef}
+            tabIndex={-1}
+            className="scroll-mt-6 text-sm font-bold text-primary-strong outline-none"
+          >
+            문항응답
+            <span className="sr-only"> · {questionIndex + 1}번 문항</span>
+          </h2>
+          <p className="text-sm font-semibold tabular-nums text-text-sub">
+            <span className="text-primary-strong">{questionIndex + 1}</span>
+            {" / "}{QUESTIONS.length}
+          </p>
+        </div>
+        <div
+          role="progressbar"
+          aria-label="문항 진행"
+          aria-valuemin={1}
+          aria-valuemax={QUESTIONS.length}
+          aria-valuenow={questionIndex + 1}
+          aria-valuetext={`${QUESTIONS.length}개 중 ${questionIndex + 1}번 문항`}
+          className="grid grid-cols-9 gap-1.5"
+        >
+          {QUESTIONS.map((item, index) => (
+            <span
+              key={item}
+              className={`h-1.5 rounded-full ${
+                index === questionIndex
+                  ? "bg-primary-strong"
+                  : answers[index] >= 0
+                    ? "bg-primary"
+                    : "bg-bg-gray"
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
-      <ol className="space-y-7 md:space-y-8">
-        {QUESTIONS.map((question, index) => (
-          <li
-            key={question}
-            className="rounded-[30px] border border-[var(--color-border-soft)] bg-bg-gray p-6 md:p-9"
-          >
-            <div className="mb-7 flex flex-col items-center gap-3 md:gap-4">
-              <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white md:size-10 md:text-base">
-                {index + 1}
-              </span>
-              <p className="max-w-[52rem] pt-0.5 text-[16px] font-semibold leading-7 tracking-[-0.02em] text-[var(--color-text-dark)] md:text-[19px] md:leading-8">
-                {question}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {ANSWER_OPTIONS.map((option) => {
-                const selected = answers[index] === option.score;
+      <p id="question-instruction" className="mb-5 text-sm leading-6 break-keep text-text-sub">
+        지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
+      </p>
+      <fieldset key={questionIndex} aria-describedby="question-instruction">
+        <legend className="mb-6 w-full min-h-[84px] text-[20px] font-bold leading-8 tracking-[-0.02em] break-keep text-text-dark md:text-2xl">
+          {question}
+        </legend>
+        <div className="grid grid-cols-1 gap-3">
+          {ANSWER_OPTIONS.map((option) => {
+            const selected = answers[questionIndex] === option.score;
 
-                return (
-                  <label
-                    key={option.label}
-                    className={`inline-flex min-h-12 cursor-pointer items-center justify-between rounded-[18px] border px-4 py-3.5 text-sm transition-colors md:min-h-14 md:px-5 md:text-[15px] ${
-                      selected
-                        ? "border-[var(--color-border-strong)] bg-primary-soft text-[var(--color-text-dark)]"
-                        : "border-transparent bg-bg-white text-[var(--color-text-body)] hover:border-[var(--color-border-soft)] hover:bg-bg-warm-light"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${index + 1}`}
-                      value={option.score}
-                      checked={selected}
-                      onChange={() => onAnswerChange(index, option.score)}
-                      className="sr-only"
-                    />
-                    <span className="font-semibold tracking-[-0.01em]">
-                      {option.label}
-                    </span>
-                    <span
-                      className={`inline-flex min-w-10 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${
-                        selected
-                          ? "bg-primary text-white"
-                          : "bg-bg-gray text-[var(--color-text-sub)]"
-                      }`}
-                    >
-                      {option.score}점
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-          </li>
-        ))}
-      </ol>
+            return (
+              <label
+                key={option.label}
+                className={`flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-[15px] transition-colors duration-150 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-primary-strong ${
+                  selected
+                    ? "border-primary bg-primary-soft text-text-dark"
+                    : "border-border-soft bg-bg-white text-text-body hover:border-border-strong"
+                }`}
+              >
+                <span className="flex items-center gap-3 font-semibold">
+                  <input
+                    type="radio"
+                    name={`question-${questionIndex + 1}`}
+                    value={option.score}
+                    checked={selected}
+                    onChange={() => onAnswerChange(questionIndex, option.score)}
+                    className="size-[18px] shrink-0 accent-primary-strong"
+                  />
+                  {option.label}
+                </span>
+                <span
+                  className={`inline-flex min-w-10 items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold ${
+                    selected ? "bg-primary-strong text-white" : "bg-bg-gray text-text-sub"
+                  }`}
+                >
+                  {option.score}점
+                </span>
+              </label>
+            );
+          })}
+        </div>
+      </fieldset>
     </section>
   );
 }

@@ -8,6 +8,7 @@ import {
   POST_SURVEY_ALREADY_COMPLETED,
   POST_SURVEY_ALREADY_COMPLETED_TITLE,
 } from "@/lib/survey-policy";
+import { SurveyStepActions } from "@/components/SurveyStepActions";
 import { ApplyQuestionStep } from "@/app/apply/components/ApplyQuestionStep";
 import {
   PHONE_PATTERN,
@@ -44,10 +45,9 @@ export default function PostPage() {
   }, [modal]);
   const [totalScore, setTotalScore] = useState<number | null>(null);
   const [fieldErrors, setFieldErrors] = useState<PostRespondentInfoErrors>({});
-  const [showProgressPanel, setShowProgressPanel] = useState(false);
+  const [questionIndex, setQuestionIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
-  const questionSectionRef = useRef<HTMLElement | null>(null);
 
   const resultBand = useMemo(() => {
     if (totalScore === null) {
@@ -59,9 +59,8 @@ export default function PostPage() {
   const answeredCount = answers.filter((score) => score >= 0).length;
   const isQuestionStepComplete = answeredCount === QUESTIONS.length;
   const shouldShowForm = formStep === "info" || formStep === "question";
-  const showQuestionProgress =
-    formStep === "question" && !isQuestionStepComplete;
-  const questionProgressLabel = `${QUESTIONS.length}개중 ${answeredCount}개 완료`;
+  const isLastQuestion = questionIndex === QUESTIONS.length - 1;
+  const isCurrentQuestionAnswered = answers[questionIndex] >= 0;
   const primaryButtonLabel =
     formStep === "info"
       ? isSubmitting
@@ -69,8 +68,13 @@ export default function PostPage() {
         : "검사 시작하기"
       : isSubmitting
         ? "불러오는중"
-        : "결과보기";
-  const isPrimaryButtonDisabled = isSubmitting || showQuestionProgress;
+        : isLastQuestion
+          ? "결과보기"
+          : "다음";
+  const isPrimaryButtonDisabled =
+    isSubmitting ||
+    (formStep === "question" &&
+      (!isCurrentQuestionAnswered || (isLastQuestion && !isQuestionStepComplete)));
   const resultBadgeClass =
     totalScore !== null && totalScore >= 20
       ? "bg-primary text-white"
@@ -84,45 +88,6 @@ export default function PostPage() {
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [formStep]);
-
-  useEffect(() => {
-    if (formStep !== "question") {
-      setShowProgressPanel(false);
-      return;
-    }
-
-    let frame = 0;
-    const threshold = 96;
-
-    const updateProgressVisibility = () => {
-      const questionSection = questionSectionRef.current;
-
-      if (!questionSection) {
-        return;
-      }
-
-      const nextVisible =
-        questionSection.getBoundingClientRect().top <= threshold;
-      setShowProgressPanel((previousVisible) =>
-        previousVisible === nextVisible ? previousVisible : nextVisible,
-      );
-    };
-
-    const handleScrollOrResize = () => {
-      cancelAnimationFrame(frame);
-      frame = window.requestAnimationFrame(updateProgressVisibility);
-    };
-
-    handleScrollOrResize();
-    window.addEventListener("scroll", handleScrollOrResize, { passive: true });
-    window.addEventListener("resize", handleScrollOrResize);
-
-    return () => {
-      cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", handleScrollOrResize);
-      window.removeEventListener("resize", handleScrollOrResize);
-    };
   }, [formStep]);
 
   const updateInfoField = (key: keyof PostRespondentInfo, value: string) => {
@@ -184,6 +149,7 @@ export default function PostPage() {
       ) {
         setFormStep("info");
         setAnswers(Array.from({ length: QUESTIONS.length }, () => -1));
+        setQuestionIndex(0);
         setMatchToken("");
         setPreAnswers([]);
         setTotalScore(null);
@@ -282,6 +248,7 @@ export default function PostPage() {
           return;
         }
         setMatchToken(result.matchToken);
+        setQuestionIndex(0);
         setFormStep("question");
       } catch {
         setModal({
@@ -294,6 +261,11 @@ export default function PostPage() {
       return;
     }
 
+    if (!isCurrentQuestionAnswered) return;
+    if (!isLastQuestion) {
+      setQuestionIndex((index) => index + 1);
+      return;
+    }
     if (!isQuestionStepComplete || isSubmitting) {
       return;
     }
@@ -302,32 +274,7 @@ export default function PostPage() {
   };
 
   return (
-    <div className="min-h-screen bg-bg-warm-light py-14 pb-28 md:py-20 md:pb-20">
-      {formStep === "question" && showProgressPanel ? (
-        <div className="pointer-events-none fixed left-1/2 top-3 z-40 hidden w-[calc(100vw-4rem)] max-w-[60rem] -translate-x-1/2 md:block">
-          <section className="pointer-events-auto w-full rounded-3xl border border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.94)] px-5 py-3 backdrop-blur-sm">
-            <div className="mb-2 flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold text-[var(--color-text-sub)]">
-                문항 진행
-              </p>
-              <p className="text-sm font-semibold tabular-nums text-[var(--color-text-body)]">
-                {questionProgressLabel}
-              </p>
-            </div>
-            <div className="grid grid-cols-9 gap-1.5">
-              {QUESTIONS.map((question, index) => (
-                <span
-                  key={question}
-                  className={`h-1.5 rounded-full transition-colors duration-150 ${
-                    answers[index] >= 0 ? "bg-primary" : "bg-bg-gray"
-                  }`}
-                />
-              ))}
-            </div>
-          </section>
-        </div>
-      ) : null}
-
+    <div className={`min-h-screen bg-bg-warm-light pb-28 md:pb-20 ${formStep === "question" ? "pt-6 md:pt-10" : "pt-14 md:pt-20"}`}>
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
         <header className="pt-3 text-center md:pt-5">
           <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
@@ -340,13 +287,13 @@ export default function PostPage() {
 
         <div
           aria-hidden="true"
-          className="mt-10 -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden"
+          className={`${formStep === "question" ? "mt-6" : "mt-10"} -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden`}
         />
 
         <form
           id="post-phq-test-form"
           onSubmit={submit}
-          className={`mt-8 space-y-10 md:mt-16 md:space-y-12 ${
+          className={`space-y-8 ${formStep === "question" ? "mt-6 md:mt-8" : "mt-8 md:mt-16"} ${
             shouldShowForm ? "" : "hidden"
           }`}
         >
@@ -359,11 +306,13 @@ export default function PostPage() {
               />
             </fieldset>
           ) : formStep === "question" ? (
-            <ApplyQuestionStep
-              answers={answers}
-              onAnswerChange={updateAnswer}
-              sectionRef={questionSectionRef}
-            />
+            <fieldset disabled={isSubmitting}>
+              <ApplyQuestionStep
+                answers={answers}
+                onAnswerChange={updateAnswer}
+                questionIndex={questionIndex}
+              />
+            </fieldset>
           ) : null}
 
           {submitError ? (
@@ -385,20 +334,6 @@ export default function PostPage() {
               </button>
             </div>
           ) : null}
-
-          <div className="hidden w-full justify-center pt-2 md:flex md:pt-4">
-            <button
-              type="submit"
-              disabled={isPrimaryButtonDisabled}
-              className={`rounded-full bg-primary px-12 py-4 text-[17px] font-semibold text-white transition-[background-color,scale] duration-150 ease-out active:scale-[0.96] ${
-                isPrimaryButtonDisabled
-                  ? "cursor-not-allowed opacity-70"
-                  : "hover:bg-primary-light"
-              }`}
-            >
-              {primaryButtonLabel}
-            </button>
-          </div>
         </form>
 
         {formStep === "result" && resultBand && totalScore !== null ? (
@@ -444,36 +379,17 @@ export default function PostPage() {
         </button>
       </dialog>
       {shouldShowForm ? (
-        <div className="fixed left-1/2 bottom-0 z-20 w-full max-w-[450px] -translate-x-1/2 border-t border-[var(--color-border-soft)] bg-[rgba(255,253,252,0.96)] p-4 backdrop-blur-sm md:hidden">
-          <button
-            type="submit"
-            form="post-phq-test-form"
-            disabled={isPrimaryButtonDisabled}
-            className={`w-full rounded-full bg-primary px-6 py-4 text-[16px] font-semibold text-white transition-[scale] duration-150 ease-out active:scale-[0.96] ${
-              isPrimaryButtonDisabled ? "cursor-not-allowed opacity-70" : ""
-            }`}
-          >
-            {showQuestionProgress ? (
-              <span className="flex w-full flex-col gap-2">
-                <span className="text-sm font-semibold leading-none tabular-nums">
-                  {questionProgressLabel}
-                </span>
-                <span className="grid grid-cols-9 gap-1.5">
-                  {QUESTIONS.map((question, index) => (
-                    <span
-                      key={`mobile-${question}`}
-                      className={`h-1.5 rounded-full ${
-                        answers[index] >= 0 ? "bg-white" : "bg-primary-soft"
-                      }`}
-                    />
-                  ))}
-                </span>
-              </span>
-            ) : (
-              primaryButtonLabel
-            )}
-          </button>
-        </div>
+        <SurveyStepActions
+          formId="post-phq-test-form"
+          primaryLabel={primaryButtonLabel}
+          isPrimaryDisabled={isPrimaryButtonDisabled}
+          onPrevious={
+            formStep === "question"
+              ? () => setQuestionIndex((index) => Math.max(0, index - 1))
+              : undefined
+          }
+          isPreviousDisabled={questionIndex === 0 || isSubmitting}
+        />
       ) : null}
     </div>
   );
