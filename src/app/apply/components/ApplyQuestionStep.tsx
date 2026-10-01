@@ -63,15 +63,10 @@ export function ApplyQuestionStep({
         </div>
       </div>
 
-      <p id="question-instruction" className="mb-2 text-sm leading-6 break-keep text-text-sub">
+      <p id="question-instruction" className="mb-5 text-sm leading-6 break-keep text-text-sub">
         지난 2주간, 얼마나 자주 다음과 같은 문제들로 곤란을 겪으셨습니까?
       </p>
-      <p id="question-navigation-hint" className="mb-5 text-xs leading-5 text-text-sub">
-        {questionIndex === QUESTIONS.length - 1
-          ? "답변을 선택하면 검사 결과로 넘어갑니다."
-          : "답변을 선택하면 다음 문항으로 넘어갑니다."}
-      </p>
-      <fieldset key={questionIndex} aria-describedby="question-instruction question-navigation-hint">
+      <fieldset key={questionIndex} aria-describedby="question-instruction">
         <legend className="mb-6 w-full min-h-[84px] text-[20px] font-bold leading-8 tracking-[-0.02em] break-keep text-text-dark md:text-2xl">
           {question}
         </legend>

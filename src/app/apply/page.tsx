@@ -8,6 +8,7 @@ import { ApplyInfoStep } from "./components/ApplyInfoStep";
 import { ApplyIneligibleStep } from "./components/ApplyIneligibleStep";
 import { ApplyIntroStep } from "./components/ApplyIntroStep";
 import { SurveyStepActions } from "@/components/SurveyStepActions";
+import { SurveyHeader } from "@/components/SurveyHeader";
 import { ApplyQuestionStep } from "./components/ApplyQuestionStep";
 import { ApplyResultStep } from "./components/ApplyResultStep";
 import { ApplySubmittedStep } from "./components/ApplySubmittedStep";
@@ -53,12 +54,6 @@ export default function TestPage() {
     nickname: "",
     contact: "",
     consultationMethod: "",
-    consultationTopic: "",
-    consultationTopicDetail: "",
-    supportTopics: [],
-    supportTopicsDetail: "",
-    hardshipLevel: "",
-    expectedSupport: [],
     preferredSchedules: createPreferredScheduleSlots(),
     privacyConsent: false,
   });
@@ -118,21 +113,8 @@ export default function TestPage() {
   const updateInfoField = (key: RespondentTextFieldKey, value: string) => {
     const nextValue =
       key === "contact" ? value.replace(/\D/g, "").slice(0, 11) : value;
-    setInfo((prev) => {
-      if (key === "consultationTopic" && nextValue !== "기타") {
-        return {
-          ...prev,
-          consultationTopic: nextValue,
-          consultationTopicDetail: "",
-        };
-      }
-
-      return { ...prev, [key]: nextValue };
-    });
+    setInfo((prev) => ({ ...prev, [key]: nextValue }));
     clearFieldError(key);
-    if (key === "consultationTopic" && nextValue !== "기타") {
-      clearFieldError("consultationTopicDetail");
-    }
     setSubmitError("");
   };
 
@@ -157,64 +139,6 @@ export default function TestPage() {
       ),
     }));
     clearFieldError("preferredSchedules");
-    setSubmitError("");
-  };
-
-  const toggleSupportTopic = (topic: string) => {
-    setInfo((prev) => {
-      const alreadySelected = prev.supportTopics.includes(topic);
-
-      if (alreadySelected) {
-        const nextSupportTopics = prev.supportTopics.filter(
-          (selectedTopic) => selectedTopic !== topic,
-        );
-
-        return {
-          ...prev,
-          supportTopics: nextSupportTopics,
-          supportTopicsDetail: topic === "기타" ? "" : prev.supportTopicsDetail,
-        };
-      }
-
-      if (prev.supportTopics.length >= 2) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        supportTopics: [...prev.supportTopics, topic],
-      };
-    });
-    clearFieldError("supportTopics");
-    if (topic === "기타") {
-      clearFieldError("supportTopicsDetail");
-    }
-    setSubmitError("");
-  };
-
-  const toggleExpectedSupport = (option: string) => {
-    setInfo((prev) => {
-      const alreadySelected = prev.expectedSupport.includes(option);
-
-      if (alreadySelected) {
-        return {
-          ...prev,
-          expectedSupport: prev.expectedSupport.filter(
-            (selectedOption) => selectedOption !== option,
-          ),
-        };
-      }
-
-      if (prev.expectedSupport.length >= 2) {
-        return prev;
-      }
-
-      return {
-        ...prev,
-        expectedSupport: [...prev.expectedSupport, option],
-      };
-    });
-    clearFieldError("expectedSupport");
     setSubmitError("");
   };
 
@@ -248,20 +172,6 @@ export default function TestPage() {
       : DEFAULT_DEBUG_INFO.contact,
     consultationMethod:
       info.consultationMethod || DEFAULT_DEBUG_INFO.consultationMethod,
-    consultationTopic:
-      info.consultationTopic || DEFAULT_DEBUG_INFO.consultationTopic,
-    consultationTopicDetail:
-      info.consultationTopic === "기타"
-        ? info.consultationTopicDetail.trim() ||
-          DEFAULT_DEBUG_INFO.consultationTopicDetail
-        : "",
-    supportTopics: info.supportTopics,
-    supportTopicsDetail: info.supportTopics.includes("기타")
-      ? info.supportTopicsDetail.trim() ||
-        DEFAULT_DEBUG_INFO.supportTopicsDetail
-      : "",
-    hardshipLevel: info.hardshipLevel || DEFAULT_DEBUG_INFO.hardshipLevel,
-    expectedSupport: info.expectedSupport,
     preferredSchedules: createPreferredScheduleSlots().map((slot, index) => {
       const schedule = info.preferredSchedules[index] ?? slot;
       const scheduleDate = getKoreaDateString(
@@ -421,38 +331,6 @@ export default function TestPage() {
       }
     }
 
-    if (!info.consultationTopic) {
-      nextFieldErrors.consultationTopic = "상담주제를 선택해주세요.";
-    } else if (
-      info.consultationTopic === "기타" &&
-      !info.consultationTopicDetail.trim()
-    ) {
-      nextFieldErrors.consultationTopicDetail = "기타 상담주제를 입력해주세요.";
-    }
-
-    if (info.supportTopics.length > 2) {
-      nextFieldErrors.supportTopics =
-        "추가 상담주제는 최대 2개까지 선택할 수 있습니다.";
-    } else if (
-      info.supportTopics.includes("기타") &&
-      !info.supportTopicsDetail.trim()
-    ) {
-      nextFieldErrors.supportTopicsDetail =
-        "추가 상담주제의 기타 내용을 입력해주세요.";
-    }
-
-    if (!info.hardshipLevel) {
-      nextFieldErrors.hardshipLevel = "현재 가장 힘든 정도를 선택해주세요.";
-    }
-
-    if (info.expectedSupport.length === 0) {
-      nextFieldErrors.expectedSupport =
-        "상담에서 기대하는 도움을 1개 이상 선택해주세요.";
-    } else if (info.expectedSupport.length > 2) {
-      nextFieldErrors.expectedSupport =
-        "상담에서 기대하는 도움은 최대 2개까지 선택할 수 있습니다.";
-    }
-
     if (!info.privacyConsent) {
       nextFieldErrors.privacyConsent =
         "개인정보 수집 및 이용에 동의해주세요.";
@@ -487,17 +365,6 @@ export default function TestPage() {
           nickname: info.nickname.trim(),
           contact: info.contact.trim(),
           consultationMethod: info.consultationMethod,
-          consultationTopic: info.consultationTopic,
-          consultationTopicDetail:
-            info.consultationTopic === "기타"
-              ? info.consultationTopicDetail.trim()
-              : "",
-          supportTopics: info.supportTopics,
-          supportTopicsDetail: info.supportTopics.includes("기타")
-            ? info.supportTopicsDetail.trim()
-            : "",
-          hardshipLevel: info.hardshipLevel,
-          expectedSupport: info.expectedSupport,
           preferredSchedules: info.preferredSchedules
             .slice(0, PREFERRED_SCHEDULE_LIMIT)
             .map(({ date, time }) => ({ date, time })),
@@ -562,23 +429,7 @@ export default function TestPage() {
       ) : null}
 
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
-        <header className="-mx-5 bg-bg-warm px-5 pt-6 pb-5 text-center sm:-mx-7 sm:px-7 md:pt-10 lg:-mx-10 lg:px-10">
-          <p className="mx-auto mb-2 max-w-[42rem] break-keep text-[15px] font-normal tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            <strong className="font-bold">경기도 거주 직장인</strong> 또는<br />
-            <strong className="font-bold">경기도 소재 회사에 재직중인 직장인</strong>을 위한
-          </p>
-          <h1 className="mb-3 text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
-            멘탈케어 프로젝트
-          </h1>
-          {formStep === "question" ? (
-            <p className="mv-apply-stage-label">사전검사 - 우울검사(PHQ-9)</p>
-          ) : (
-            <p className="mv-apply-note">
-              경기도 거주 또는 경기도 소재 회사 재직 여부와<br />
-              우울검사(PHQ-9) 결과에 따라 대상자 여부가 결정됩니다.
-            </p>
-          )}
-        </header>
+        <SurveyHeader stageLabel={formStep === "question" ? "사전검사 - 우울검사(PHQ-9)" : undefined} />
 
         {formStep === "eligibility" ? (
           <ApplyEligibilityStep
@@ -611,9 +462,7 @@ export default function TestPage() {
             <ApplyInfoStep
               fieldErrors={fieldErrors}
               info={info}
-              onToggleExpectedSupport={toggleExpectedSupport}
               onPrivacyConsentChange={updatePrivacyConsent}
-              onToggleSupportTopic={toggleSupportTopic}
               onUpdateField={updateInfoField}
               onUpdatePreferredSchedule={updatePreferredSchedule}
               submitError={submitError}

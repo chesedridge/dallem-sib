@@ -52,6 +52,56 @@ it("requires affiliation and privacy consent before completing the application",
   expect(screen.queryByText("신청이 정상적으로 접수되었습니다")).not.toBeInTheDocument();
 });
 
+it("completes the application using only the remaining fields", async () => {
+  const originalFetch = global.fetch;
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true, json: async () => ({}) });
+  global.fetch = fetchMock;
+  jest.useFakeTimers().setSystemTime(new Date("2026-10-01T00:00:00Z"));
+  try {
+    const { container } = render(<TestPage />);
+    fireEvent.click(screen.getByRole("button", { name: "네, 해당합니다" }));
+    fireEvent.click(screen.getByRole("button", { name: "시작하기" }));
+    answerQuestions(container, [2,2,0,0,0,0,0,0,1]);
+    fireEvent.click(screen.getByRole("button", { name: "상담 신청하기" }));
+    expect(screen.queryByText(/상담주제|현재 가장 힘든 정도|상담에서 기대하는 도움/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: "경기도에 거주하는 직장인입니다" }));
+    fireEvent.change(screen.getByLabelText("이름 (또는 닉네임)"), { target: { value: "테스트" } });
+    fireEvent.change(screen.getByLabelText("연락처"), { target: { value: "01012345678" } });
+    fireEvent.click(screen.getByRole("radio", { name: "화상상담" }));
+    ["10:00", "11:00", "12:00"].forEach((time, index) => {
+      fireEvent.change(container.querySelector(`input[name="preferredScheduleDate-${index + 1}"]`)!, {
+        target: { value: "2026-10-05" },
+      });
+      fireEvent.change(container.querySelector(`input[name="preferredScheduleTime-${index + 1}"]`)!, {
+        target: { value: time },
+      });
+    });
+    fireEvent.click(screen.getByRole("checkbox", { name: "개인정보 수집 및 이용에 동의합니다. (필수)" }));
+    fireEvent.submit(container.querySelector("#phq-test-form")!);
+
+    expect(await screen.findByRole("heading", { name: "신청이 정상적으로 접수되었습니다" })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe("/api/survey-results");
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      formVersion: 2,
+      affiliation: "경기도에 거주하는 직장인입니다",
+      nickname: "테스트",
+      contact: "01012345678",
+      consultationMethod: "화상상담",
+      preferredSchedules: ["10:00", "11:00", "12:00"].map(time => ({ date: "2026-10-05", time })),
+      privacyConsent: true,
+      answers: [2,2,0,0,0,0,0,0,1],
+      totalScore: 5,
+      resultTitle: expect.any(String),
+      resultDescription: expect.any(String),
+    });
+  } finally {
+    global.fetch = originalFetch;
+    jest.useRealTimers();
+  }
+});
+
 
 it("advances on answer selection, preserves edits, and advances when selecting an existing answer again", () => {
   const { container } = render(<TestPage />);

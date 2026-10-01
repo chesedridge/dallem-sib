@@ -172,3 +172,17 @@ it("keeps the final answer after a save failure and retries by selecting it agai
     totalScore: 1,
   });
 });
+
+it("previews question and result screens without looking up or saving survey records", () => {
+  render(<PostPage />);
+  fireEvent.click(screen.getByText("Debug Tools"));
+  fireEvent.click(screen.getByRole("button", { name: "question" }));
+  expect(screen.getByText("사후검사 - 우울검사(PHQ-9)")).toBeInTheDocument();
+  for (let index = 0; index < 9; index++) {
+    fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  }
+  expect(screen.getByText("검사 완료 · 4회기 후")).toBeInTheDocument();
+  expect(fetchMock).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole("button", { name: "info" }));
+  expect(screen.getByLabelText("연락처")).toHaveValue("");
+});

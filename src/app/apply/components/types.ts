@@ -15,12 +15,6 @@ export type RespondentInfo = {
   nickname: string;
   contact: string;
   consultationMethod: string;
-  consultationTopic: string;
-  consultationTopicDetail: string;
-  supportTopics: string[];
-  supportTopicsDetail: string;
-  hardshipLevel: string;
-  expectedSupport: string[];
   preferredSchedules: PreferredSchedule[];
   privacyConsent: boolean;
 };

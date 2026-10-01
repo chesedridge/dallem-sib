@@ -75,12 +75,6 @@ type SurveySubmission = {
   nickname: string;
   contact: string;
   consultationMethod: string;
-  consultationTopic: string;
-  consultationTopicDetail: string;
-  supportTopics: string[];
-  supportTopicsDetail: string;
-  hardshipLevel: string;
-  expectedSupport: string[];
   preferredSchedules: PreferredSchedule[];
   privacyConsent: boolean;
   answers: number[];
@@ -102,12 +96,6 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
   const nickname = submission.nickname?.trim();
   const contact = submission.contact?.trim();
   const consultationMethod = submission.consultationMethod?.trim();
-  const consultationTopic = submission.consultationTopic?.trim();
-  const consultationTopicDetail = submission.consultationTopicDetail?.trim() ?? "";
-  const supportTopics = submission.supportTopics;
-  const supportTopicsDetail = submission.supportTopicsDetail?.trim() ?? "";
-  const hardshipLevel = submission.hardshipLevel?.trim();
-  const expectedSupport = submission.expectedSupport;
   const preferredSchedules = submission.preferredSchedules;
   const answers = submission.answers;
   const totalScore = submission.totalScore;
@@ -118,8 +106,6 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     !nickname ||
     !contact ||
     !consultationMethod ||
-    !consultationTopic ||
-    !hardshipLevel ||
     !resultTitle ||
     !resultDescription
   ) {
@@ -169,49 +155,6 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     return null;
   }
 
-  if (consultationTopic === "기타" && !consultationTopicDetail) {
-    return null;
-  }
-
-  if (!Array.isArray(supportTopics) || supportTopics.length > 2) {
-    return null;
-  }
-
-  const normalizedSupportTopics = supportTopics
-    .filter((topic): topic is string => typeof topic === "string")
-    .map((topic) => topic.trim())
-    .filter(Boolean);
-
-  if (
-    normalizedSupportTopics.length !== supportTopics.length ||
-    new Set(normalizedSupportTopics).size !== normalizedSupportTopics.length
-  ) {
-    return null;
-  }
-
-  if (
-    normalizedSupportTopics.includes("기타") &&
-    !supportTopicsDetail
-  ) {
-    return null;
-  }
-
-  if (!Array.isArray(expectedSupport) || expectedSupport.length > 2) {
-    return null;
-  }
-
-  const normalizedExpectedSupport = expectedSupport
-    .filter((option): option is string => typeof option === "string")
-    .map((option) => option.trim())
-    .filter(Boolean);
-
-  if (
-    normalizedExpectedSupport.length !== expectedSupport.length ||
-    new Set(normalizedExpectedSupport).size !== normalizedExpectedSupport.length
-  ) {
-    return null;
-  }
-
   if (!PHONE_PATTERN.test(contact)) {
     return null;
   }
@@ -239,12 +182,6 @@ function validateSubmission(payload: unknown): SurveySubmission | null {
     nickname,
     contact,
     consultationMethod,
-    consultationTopic,
-    consultationTopicDetail,
-    supportTopics: normalizedSupportTopics,
-    supportTopicsDetail,
-    hardshipLevel,
-    expectedSupport: normalizedExpectedSupport,
     preferredSchedules: completePreferredSchedules,
     privacyConsent: submission.privacyConsent,
     answers,
@@ -453,12 +390,8 @@ export async function POST(request: Request) {
             // 기존 시트의 열 순서를 유지하되, 지역은 더 이상 수집하지 않는다.
             "",
             payload.consultationMethod,
-            payload.consultationTopic,
-            payload.consultationTopicDetail,
-            payload.supportTopics.join(", "),
-            payload.supportTopicsDetail,
-            payload.hardshipLevel,
-            payload.expectedSupport.join(", "),
+            // 수집을 종료한 상담주제·추가 주제·힘든 정도·기대 도움 열은 비워 둔다.
+            ...Array<string>(6).fill(""),
             ...payload.answers,
             payload.totalScore,
             payload.resultTitle,

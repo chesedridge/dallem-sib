@@ -9,8 +9,10 @@ import {
   POST_SURVEY_ALREADY_COMPLETED_TITLE,
 } from "@/lib/survey-policy";
 import { SurveyStepActions } from "@/components/SurveyStepActions";
+import { SurveyHeader } from "@/components/SurveyHeader";
 import { ApplyQuestionStep } from "@/app/apply/components/ApplyQuestionStep";
 import {
+  DEFAULT_DEBUG_ANSWERS,
   PHONE_PATTERN,
   QUESTIONS,
   findResultBand,
@@ -23,8 +25,11 @@ import {
 import { PostResultStep } from "./components/PostResultStep";
 
 type PostFormStep = "info" | "question" | "result";
+const DEBUG_STEPS: PostFormStep[] = ["info", "question", "result"];
 
 export default function PostPage() {
+  const isDebugMode = process.env.NODE_ENV !== "production";
+  const [isDebugPreview, setIsDebugPreview] = useState(false);
   const [formStep, setFormStep] = useState<PostFormStep>("info");
   const [info, setInfo] = useState<PostRespondentInfo>({
     nickname: "",
@@ -109,6 +114,13 @@ export default function PostPage() {
 
   const submitPostSurvey = async (nextAnswers: number[]) => {
     const score = nextAnswers.reduce((sum, answer) => sum + answer, 0);
+
+    if (isDebugMode && isDebugPreview) {
+      setPreAnswers([...DEFAULT_DEBUG_ANSWERS]);
+      setTotalScore(score);
+      setFormStep("result");
+      return;
+    }
 
     try {
       setIsSubmitting(true);
@@ -202,6 +214,22 @@ export default function PostPage() {
     void advanceQuestion(nextAnswers);
   };
 
+  const moveToDebugStep = (nextStep: PostFormStep) => {
+    if (isSubmitting) return;
+    const nextAnswers = nextStep === "result"
+      ? [...DEFAULT_DEBUG_ANSWERS]
+      : Array.from({ length: QUESTIONS.length }, () => -1);
+    setIsDebugPreview(nextStep !== "info");
+    setFieldErrors({});
+    setSubmitError("");
+    setQuestionIndex(0);
+    setAnswers(nextAnswers);
+    setPreAnswers(nextStep === "result" ? [...DEFAULT_DEBUG_ANSWERS] : []);
+    setTotalScore(nextStep === "result" ? nextAnswers.reduce((sum, answer) => sum + answer, 0) : null);
+    setMatchToken("");
+    setFormStep(nextStep);
+  };
+
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -276,26 +304,34 @@ export default function PostPage() {
   };
 
   return (
-    <div className={`min-h-screen bg-bg-warm-light pb-28 md:pb-20 ${formStep === "question" ? "pt-6 md:pt-10" : "pt-14 md:pt-20"}`}>
+    <div className="min-h-screen bg-bg-warm-light pb-28 md:pb-20">
+      {isDebugMode ? (
+        <details className="fixed right-4 top-4 z-50 w-[12rem] rounded-2xl border border-[var(--color-border-soft)] bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)] backdrop-blur-sm">
+          <summary className="cursor-pointer text-xs font-semibold uppercase tracking-[0.14em] text-[var(--color-text-sub)]">
+            Debug Tools
+          </summary>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            {DEBUG_STEPS.map((step) => (
+              <button
+                key={step}
+                type="button"
+                disabled={isSubmitting}
+                onClick={() => moveToDebugStep(step)}
+                className="rounded-xl border border-[var(--color-border-soft)] bg-white px-3 py-2 text-left text-xs font-semibold text-[var(--color-text-body)] disabled:opacity-40"
+              >
+                {step}
+              </button>
+            ))}
+          </div>
+        </details>
+      ) : null}
       <main className="mx-auto w-full max-w-6xl px-5 sm:px-7 lg:px-10">
-        <header className="pt-3 text-center md:pt-5">
-          <p className="mb-2 text-[18px] font-extrabold tracking-[-0.03em] text-[var(--color-primary-strong)] md:text-[22px]">
-            사후검사
-          </p>
-          <h1 className="text-balance text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-[var(--color-text-dark)] md:text-[38px]">
-            멘탈케어 프로젝트
-          </h1>
-        </header>
-
-        <div
-          aria-hidden="true"
-          className={`${formStep === "question" ? "mt-6" : "mt-10"} -mx-5 border-t border-solid border-[var(--color-border-soft)] sm:-mx-7 md:hidden`}
-        />
+        <SurveyHeader stageLabel="사후검사 - 우울검사(PHQ-9)" />
 
         <form
           id="post-phq-test-form"
           onSubmit={submit}
-          className={`space-y-8 ${formStep === "question" ? "mt-6 md:mt-8" : "mt-8 md:mt-16"} ${
+          className={`mt-6 space-y-8 ${formStep === "question" ? "md:mt-8" : "md:mt-16"} ${
             shouldShowForm ? "" : "hidden"
           }`}
         >

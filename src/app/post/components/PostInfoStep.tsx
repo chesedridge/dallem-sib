@@ -41,8 +41,8 @@ export function PostInfoStep({
   onUpdateField,
 }: PostInfoStepProps) {
   return (
-    <section className="apply-info-card bg-bg-white text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:p-14">
-      <div className="mx-auto mb-10 max-w-3xl text-center">
+    <section className="mx-auto max-w-[48rem] text-center md:rounded-[36px] md:border md:border-[var(--color-border-soft)] md:bg-white md:p-14 md:shadow-[0_12px_40px_rgba(128,86,79,0.06)]">
+      <div className="mx-auto mb-8 max-w-3xl text-center md:mb-12">
         <h2 className="text-balance text-2xl font-extrabold tracking-[-0.03em] text-[var(--color-text-dark)] md:text-3xl">
           우울(PHQ-9) 자가검진
         </h2>
@@ -53,7 +53,7 @@ export function PostInfoStep({
         </p>
       </div>
 
-      <div className="space-y-7">
+      <div className="space-y-8 md:space-y-9">
         {POST_INFO_FIELDS.map((field) => {
           const fieldError = fieldErrors[field.key];
 

@@ -935,8 +935,7 @@ a {
 .mv-start-cta { margin: 24px auto 0; max-width: 32rem; font-weight:600; }
 
 .post-result .card{
-  background:#fff;border:1px solid var(--color-border-soft);border-radius:26px;
-  box-shadow:0 12px 34px rgba(128,86,79,.06);padding:26px 18px;
+  padding:0;
 }
 .post-result .pill{
   display:inline-block;padding:5px 13px;border-radius:999px;
@@ -955,8 +954,8 @@ a {
 .post-result .alert p{font-size:13px;line-height:20px;letter-spacing:-.02em;color:var(--color-text-body);}
 
 /* 변화 요약 */
-.post-result .band-now{font-size:19px;font-weight:800;letter-spacing:-.03em;margin:12px 0 8px;}
-.post-result .lede{font-size:13.5px;line-height:21px;letter-spacing:-.02em;color:var(--color-text-body);}
+.post-result .band-now{font-size:24px;font-weight:800;line-height:32px;letter-spacing:-.03em;margin:12px 0 16px;}
+.post-result .lede{font-size:15px;line-height:28px;color:var(--color-text-body);}
 
 .post-result .compare{margin-top:20px;padding:20px 14px 16px;border-radius:20px;background:var(--color-bg-white);}
 .post-result .delta{
@@ -1004,9 +1003,9 @@ a {
 
 /* 하단 */
 .post-result .explain{margin-top:20px;padding:16px 14px;border-radius:18px;background:var(--color-bg-gray);
-  font-size:13px;line-height:21px;letter-spacing:-.02em;color:var(--color-text-body);text-align:left;}
+  font-size:15px;line-height:28px;color:var(--color-text-body);text-align:left;}
 
-.post-result { max-width:48rem; margin:28px auto 0; text-align:center; word-break:keep-all; overflow-wrap:anywhere; }
+.post-result { max-width:48rem; margin:24px auto 0; text-align:center; word-break:keep-all; overflow-wrap:anywhere; }
 .post-result h2 { color:var(--color-text-dark); }
 .post-result summary:focus-visible { outline:2px solid var(--color-primary-strong); outline-offset:4px; }
 .survey-modal { margin:auto; width:calc(100% - 40px); max-width:400px; padding:26px 22px; border:1px solid var(--color-border-soft); border-radius:24px; background:white; color:var(--color-text-dark); }
@@ -1024,7 +1023,15 @@ a {
     box-shadow:0 12px 40px rgba(128,86,79,.06);
   }
   .mv-start-list { max-width:32rem; margin:auto; }
-  .post-result .card { padding:40px; } .post-result .band-now { font-size:26px; }
+  .post-result { margin-top:64px; }
+  .post-result .card {
+    padding:40px;
+    background:#fff;
+    border:1px solid var(--color-border-soft);
+    border-radius:36px;
+    box-shadow:0 12px 34px rgba(128,86,79,.06);
+  }
+  .post-result .band-now { font-size:30px; line-height:36px; }
   .post-result .lede, .post-result .explain { font-size:16px; line-height:1.8; }
   .post-result .compare { padding:28px; } .post-result .bars { max-width:380px; margin-inline:auto; }
 }

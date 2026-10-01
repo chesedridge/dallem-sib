@@ -28,56 +28,6 @@ export const INFO_FIELDS: InfoField[] = [
 
 export const CONSULTATION_METHOD_OPTIONS = ["화상상담", "전화상담"] as const;
 
-export const CONSULTATION_TOPIC_OPTIONS = [
-  "우울감·무기력",
-  "불안·과도한 걱정",
-  "스트레스 관리",
-  "감정 조절 어려움",
-  "자존감·자신감 저하",
-  "대인관계 어려움",
-  "직장 내 소통·관계 갈등",
-  "업무 과부하·번아웃",
-  "직무 적응·커리어 고민",
-  "가족 관계 고민",
-  "부부·연인 관계 고민",
-  "수면 문제",
-  "삶의 의미·동기 저하",
-  "기타",
-] as const;
-
-export const SUPPORT_TOPIC_OPTIONS = [
-  "우울감·무기력",
-  "불안·과도한 걱정",
-  "스트레스 관리",
-  "감정 조절 어려움",
-  "자존감·자신감 저하",
-  "대인관계 어려움",
-  "직장 내 소통·관계 갈등",
-  "업무 과부하·번아웃",
-  "직무 적응·커리어 고민",
-  "가족 관계 고민",
-  "부부·연인 관계 고민",
-  "수면 문제",
-  "삶의 의미·동기 저하",
-  "기타",
-] as const;
-
-export const HARDSHIP_LEVEL_OPTIONS = [
-  "가벼운 편",
-  "견디기 버거운 편",
-  "일상에 영향을 주는 편",
-  "매우 심한 편",
-] as const;
-
-export const EXPECTED_SUPPORT_OPTIONS = [
-  "감정을 정리하고 싶어요",
-  "문제 원인을 이해하고 싶어요",
-  "스트레스 대처 방법을 알고 싶어요",
-  "관계 문제를 풀고 싶어요",
-  "당장 실질적인 도움을 받고 싶어요",
-  "잘 모르겠어요",
-] as const;
-
 export const PHONE_PATTERN = /^010\d{7,8}$/;
 
 export const QUESTIONS = [
@@ -102,12 +52,6 @@ export const DEFAULT_DEBUG_INFO: RespondentInfo = {
   nickname: "디버그 사용자",
   contact: "01012345678",
   consultationMethod: CONSULTATION_METHOD_OPTIONS[0],
-  consultationTopic: CONSULTATION_TOPIC_OPTIONS[0],
-  consultationTopicDetail: "",
-  supportTopics: [],
-  supportTopicsDetail: "",
-  hardshipLevel: HARDSHIP_LEVEL_OPTIONS[0],
-  expectedSupport: [],
   preferredSchedules: [],
   privacyConsent: true,
 };

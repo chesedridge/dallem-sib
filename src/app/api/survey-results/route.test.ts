@@ -36,9 +36,8 @@ function request(answers: number[], totalScore = answers.reduce((a, b) => a + b,
   return new Request("http://localhost/api/survey-results", {
     method: "POST",
     body: JSON.stringify({
-      nickname: "test", contact: "01012345678", consultationMethod: "대면",
-      consultationTopic: "직장", supportTopics: [], hardshipLevel: "보통",
-      expectedSupport: [], privacyConsent: true,
+      nickname: "test", contact: "01012345678", consultationMethod: "화상상담",
+      privacyConsent: true,
       preferredSchedules: ["10:00", "11:00", "12:00"].map(time => ({date: "2026-09-21", time})),
       answers, totalScore, resultTitle: "검사 결과", resultDescription: "검사 설명",
       ...overrides,
@@ -86,13 +85,44 @@ it.each([
   expect((await POST(request([2,2,0,0,0,0,0,0,1], 5, overrides))).status).toBe(400);
   expect(append).not.toHaveBeenCalled();
 });
-it("appends affiliation without shifting existing columns", async () => {
+it("saves the reduced application without shifting existing columns", async () => {
   const warning = jest.spyOn(console, "warn").mockImplementation(() => {});
   try {
     expect((await POST(request([2,2,0,0,0,0,0,0,1], 5, {formVersion:2,affiliation:"경기도에 거주하는 직장인입니다"}))).status).toBe(200);
     const row = append.mock.calls[0][0].requestBody.values[0];
     expect(row).toHaveLength(31);
+    expect(row.slice(6,12)).toEqual(Array(6).fill(""));
     expect(row[30]).toBe("경기도에 거주하는 직장인입니다");
     expect(row.slice(12,21)).toEqual([2,2,0,0,0,0,0,0,1]);
+    expect(row[21]).toBe(5);
+    expect(row.slice(24,30)).toEqual([
+      "2026-09-21", "10:00", "2026-09-21", "11:00", "2026-09-21", "12:00",
+    ]);
   } finally { warning.mockRestore(); }
+});
+
+it("accepts older clients but no longer collects their retired fields", async () => {
+  const warning = jest.spyOn(console, "warn").mockImplementation(() => {});
+  try {
+    const response = await POST(request([2,2,0,0,0,0,0,0,1], 5, {
+      consultationTopic: "직장",
+      consultationTopicDetail: "",
+      supportTopics: ["기타"],
+      supportTopicsDetail: "추가 상담주제",
+      hardshipLevel: "보통",
+      expectedSupport: ["감정을 정리하고 싶어요"],
+    }));
+    expect(response.status).toBe(200);
+    expect(append.mock.calls[0][0].requestBody.values[0].slice(6,12)).toEqual(Array(6).fill(""));
+  } finally { warning.mockRestore(); }
+});
+
+it.each([
+  { consultationMethod: "" },
+  { preferredSchedules: [] },
+  { preferredSchedules: Array(3).fill({ date: "2026-09-21", time: "10:00" }) },
+])("still requires a consultation method and three distinct schedules: %j", async overrides => {
+  expect((await POST(request([2,2,0,0,0,0,0,0,1], 5, overrides))).status).toBe(400);
+  expect(getSheetsClient).not.toHaveBeenCalled();
+  expect(append).not.toHaveBeenCalled();
 });
