@@ -47,7 +47,7 @@ export function PostInfoStep({
           우울(PHQ-9) 자가검진
         </h2>
         <p className="mt-4 text-pretty text-[15px] leading-7 break-keep text-[var(--color-text-body)] md:text-[18px] md:leading-8">
-          검사 시작 전 닉네임과 연락처를 입력해주세요.
+          닉네임과 연락처를 입력해주세요.
           <br />
           검사 진행은 약 1분 정도 소요됩니다.
         </p>

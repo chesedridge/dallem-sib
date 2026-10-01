@@ -10,7 +10,7 @@ const INFO_ITEMS = [
         </span>
         <br />
         <span className="project-info-note">
-          ※ <b>경기도와 관련된</b> 사업장이 있는 기업에 재직 중이라면 
+          ※ <b>경기도</b> 사업장이 있는 기업에 재직 중이라면 
           <b>대부분 참여 가능</b>합니다.
         </span>
       </>
