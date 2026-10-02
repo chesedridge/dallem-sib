@@ -161,7 +161,6 @@ export default function TestPage() {
     const nextAnswers = [...answers];
     nextAnswers[index] = score;
     setAnswers(nextAnswers);
-    advanceQuestion(nextAnswers);
   };
 
   const buildDebugInfo = (): RespondentInfo => ({

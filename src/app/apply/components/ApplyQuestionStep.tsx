@@ -90,9 +90,6 @@ export function ApplyQuestionStep({
                     value={option.score}
                     checked={selected}
                     onChange={() => onAnswerChange(questionIndex, option.score)}
-                    onClick={() => {
-                      if (selected) onAnswerChange(questionIndex, option.score);
-                    }}
                     className="size-[18px] shrink-0 accent-primary-strong"
                   />
                   {option.label}

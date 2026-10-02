@@ -5,6 +5,7 @@ import { QUESTIONS } from "./components/constants";
 function answerQuestions(container: HTMLElement, answers: number[]) {
   answers.forEach((answer, index) => {
     fireEvent.click(container.querySelector(`input[name="question-${index + 1}"][value="${answer}"]`)!);
+    fireEvent.click(screen.getByRole("button", { name: index === QUESTIONS.length - 1 ? "결과보기" : "다음" }));
   });
 }
 
@@ -103,7 +104,7 @@ it("completes the application using only the remaining fields", async () => {
 });
 
 
-it("advances on answer selection, preserves edits, and advances when selecting an existing answer again", () => {
+it("stays on the selected question until Next is clicked and preserves edited answers", () => {
   const { container } = render(<TestPage />);
   fireEvent.click(screen.getByRole("button", { name: "네, 해당합니다" }));
   fireEvent.click(screen.getByRole("button", { name: "시작하기" }));
@@ -117,26 +118,42 @@ it("advances on answer selection, preserves edits, and advances when selecting a
   expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
 
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[0] })).toBeInTheDocument();
+  expect(screen.getByRole("radio", { name: "2~6일 1점" })).toBeChecked();
+  expect(screen.getByRole("button", { name: "다음" })).toBeEnabled();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
   expect(screen.getByRole("heading", { name: /2번 문항/ })).toHaveFocus();
   expect(screen.getByRole("button", { name: "다음" })).toBeDisabled();
   fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("group", { name: QUESTIONS[2] })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   expect(screen.getByRole("radio", { name: "7~12일 2점" })).toBeChecked();
   fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("group", { name: QUESTIONS[2] })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   expect(screen.getByRole("radio", { name: "2~6일 1점" })).toBeChecked();
   fireEvent.click(screen.getByRole("radio", { name: "거의 매일 3점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[0] })).toBeInTheDocument();
+  expect(screen.getByRole("radio", { name: "거의 매일 3점" })).toBeChecked();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("radio", { name: "7~12일 2점" })).toBeChecked();
   fireEvent.click(screen.getByRole("button", { name: "다음" }));
   for (let index = 2; index < 8; index++) {
     fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
   expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "9");
   expect(screen.getByRole("button", { name: "결과보기" })).toBeDisabled();
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[8] })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "결과보기" })).toBeEnabled();
+  expect(screen.queryByRole("heading", { name: "5~9점 : 가벼운 우울" })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
   expect(screen.getByRole("heading", { name: "5~9점 : 가벼운 우울" })).toBeInTheDocument();
 });

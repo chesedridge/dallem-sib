@@ -64,6 +64,7 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
+    fireEvent.click(screen.getByRole("button", { name: i === 9 ? "결과보기" : "다음" }));
   }
   await screen.findByRole("heading", { name: "이미 완료한 사후검사예요" });
   expect(screen.getByLabelText("닉네임 (또는 이름)")).toHaveValue("test user");
@@ -86,6 +87,7 @@ it("clears answers, token and timing after a duplicate discovered at save, then 
     fireEvent.click(
       container.querySelector(`input[name="question-${i}"][value="1"]`)!,
     );
+    fireEvent.click(screen.getByRole("button", { name: i === 9 ? "결과보기" : "다음" }));
   }
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(4));
   const payload = JSON.parse(fetchMock.mock.calls[3][1].body);
@@ -105,7 +107,7 @@ it("does not start a survey when history lookup fails", async () => {
 });
 
 
-it("advances on selection and saves every answer including the last selection only after the final question", async () => {
+it("advances only on Next and saves answers only after clicking Results on the final question", async () => {
   fetchMock.mockResolvedValueOnce(response(200, { matchToken: "test-token" }));
   const { container } = render(<PostPage />);
   enterInfo(container);
@@ -116,23 +118,38 @@ it("advances on selection and saves every answer including the last selection on
   expect(fetchMock).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
   fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[0] })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "다음" })).toBeEnabled();
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("group", { name: QUESTIONS[2] })).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   fireEvent.click(screen.getByRole("button", { name: "이전" }));
   expect(screen.getByRole("radio", { name: "없음 0점" })).toBeChecked();
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[0] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   expect(screen.getByRole("radio", { name: "7~12일 2점" })).toBeChecked();
   fireEvent.click(screen.getByRole("radio", { name: "7~12일 2점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[1] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "다음" }));
   for (let index = 2; index < 8; index++) {
     fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
   expect(fetchMock).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("button", { name: "결과보기" })).toBeDisabled();
   let resolveSave!: (value: ReturnType<typeof response>) => void;
   fetchMock.mockImplementationOnce(() => new Promise(resolve => { resolveSave = resolve; }));
   fireEvent.click(screen.getByRole("radio", { name: "거의 매일 3점" }));
+  expect(screen.getByRole("group", { name: QUESTIONS[8] })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "결과보기" })).toBeEnabled();
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
   expect(screen.getByRole("button", { name: "불러오는중" })).toBeDisabled();
   expect(screen.getByRole("button", { name: "이전" })).toBeDisabled();
   expect(screen.getAllByRole("radio").every(radio => radio.hasAttribute("disabled") || radio.closest("fieldset[disabled]"))).toBe(true);
@@ -148,7 +165,7 @@ it("advances on selection and saves every answer including the last selection on
   await screen.findByText("검사 완료 · 4회기 후");
 });
 
-it("keeps the final answer after a save failure and retries by selecting it again", async () => {
+it("keeps the final answer after a save failure and retries only when Results is clicked", async () => {
   fetchMock
     .mockResolvedValueOnce(response(200, { matchToken: "test-token" }))
     .mockResolvedValueOnce(response(503, { message: "잠시 후 다시 시도해주세요." }));
@@ -157,14 +174,20 @@ it("keeps the final answer after a save failure and retries by selecting it agai
   await screen.findByRole("group", { name: QUESTIONS[0] });
   for (let index = 0; index < 8; index++) {
     fireEvent.click(screen.getByRole("radio", { name: "없음 0점" }));
+    fireEvent.click(screen.getByRole("button", { name: "다음" }));
   }
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
   await screen.findByRole("alert");
   expect(screen.getByRole("group", { name: QUESTIONS[8] })).toBeInTheDocument();
   expect(screen.getByRole("radio", { name: "2~6일 1점" })).toBeChecked();
   expect(screen.getByRole("button", { name: "결과보기" })).toBeEnabled();
   fetchMock.mockResolvedValueOnce(response(200, { preAnswers: Array(9).fill(1) }));
   fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+  expect(fetchMock).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("group", { name: QUESTIONS[8] })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "결과보기" }));
   await screen.findByText("검사 완료 · 4회기 후");
   expect(fetchMock).toHaveBeenCalledTimes(3);
   expect(JSON.parse(fetchMock.mock.calls[2][1].body)).toMatchObject({
@@ -180,6 +203,7 @@ it("previews question and result screens without looking up or saving survey rec
   expect(screen.getByText("사후검사 - 우울검사(PHQ-9)")).toBeInTheDocument();
   for (let index = 0; index < 9; index++) {
     fireEvent.click(screen.getByRole("radio", { name: "2~6일 1점" }));
+    fireEvent.click(screen.getByRole("button", { name: index === 8 ? "결과보기" : "다음" }));
   }
   expect(screen.getByText("검사 완료 · 4회기 후")).toBeInTheDocument();
   expect(fetchMock).not.toHaveBeenCalled();

@@ -211,7 +211,6 @@ export default function PostPage() {
     nextAnswers[index] = score;
     setAnswers(nextAnswers);
     setSubmitError("");
-    void advanceQuestion(nextAnswers);
   };
 
   const moveToDebugStep = (nextStep: PostFormStep) => {
