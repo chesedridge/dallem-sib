@@ -29,6 +29,11 @@ env:
     secret: ANALYTICS_SYNC_SECRET
     availability:
       - RUNTIME
+  # GA·시트 접근용 서비스 계정(sheets@dallem-sib) 키. 콘솔 평문 환경변수에서 옮겼다.
+  - variable: GOOGLE_SERVICE_ACCOUNT_JSON_BASE64
+    secret: GOOGLE_SERVICE_ACCOUNT_JSON_BASE64
+    availability:
+      - RUNTIME
   - variable: ALIGO_API_KEY
     secret: ALIGO_API_KEY
     availability:
