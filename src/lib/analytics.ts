@@ -8,8 +8,20 @@ import {
 } from "@/lib/google";
 
 const MAIN_PAGE_BUTTON_CLICK_EVENT_NAME = "main_page_button_click";
+// 메인 페이지를 떠날 때 최대 스크롤 %를 value로 보낸다(MainPageAnalyticsEvents).
+const MAIN_PAGE_SCROLL_DEPTH_EVENT_NAME = "main_page_scroll_depth";
 
 const ANALYTICS_DATA_START_ROW = 3;
+// E열은 사람이 직접 입력하는 열이라 비워 두고, 체류시간·스크롤 깊이는 F·G열에 쓴다.
+const ENGAGEMENT_COLUMN = "F";
+const SCROLL_DEPTH_COLUMN = "G";
+const ENGAGEMENT_HEADER_VALUES = [
+  [
+    "SIB 안내페이지 체류시간\n(참여 세션당 평균 참여 시간)",
+    "SIB 안내페이지 스크롤 깊이\n(이탈 시점 최대 스크롤 위치 평균)",
+  ],
+  ["평균 체류시간(초)", "평균 스크롤 깊이(%)"],
+];
 const GOOGLE_SHEETS_DATE_EPOCH_MS = Date.UTC(1899, 11, 30);
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -41,6 +53,15 @@ type DailyRow = DailyMetricValues & {
   buttonClicks: number;
   date: string;
 };
+
+type ReportRow = {
+  dimensionValues?: Array<{ value?: string | null }>;
+  metricValues?: Array<{ value?: string | null }>;
+};
+
+type AnalyticsDataClient = NonNullable<ReturnType<typeof getAnalyticsDataClient>>;
+type SheetsClient = NonNullable<ReturnType<typeof getSheetsClient>>;
+type DateRange = { startDate: string; endDate: string };
 
 let cachedSummary:
   | {
@@ -109,17 +130,44 @@ function parseMetricValue(value?: string | null) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function metricsFromRow(row?: { metricValues?: Array<{ value?: string | null }> }) {
-  const metricValues = row?.metricValues ?? [];
+function metricAt(row: ReportRow, index: number) {
+  return parseMetricValue(row.metricValues?.[index]?.value);
+}
 
+function averageOrNull(total: number, count: number) {
+  if (count <= 0) {
+    return null;
+  }
+
+  return Math.round((total / count) * 10) / 10;
+}
+
+// 페이지 리포트 지표 순서: screenPageViews, totalUsers, userEngagementDuration, engagedSessions
+function metricsFromRow(row: ReportRow) {
   return {
-    screenPageViews: parseMetricValue(metricValues[0]?.value),
-    totalUsers: parseMetricValue(metricValues[1]?.value),
+    screenPageViews: metricAt(row, 0),
+    totalUsers: metricAt(row, 1),
   } satisfies DailyMetricValues;
 }
 
-function eventCountFromRow(row?: { metricValues?: Array<{ value?: string | null }> }) {
-  return parseMetricValue(row?.metricValues?.[0]?.value);
+// 참여 세션(10초 이상 머묾·전환 등)당 평균 참여 시간(초).
+// 방문 대부분이 바로 이탈해 활성 사용자당 평균은 0.1~0.7초에 머물러 변화가 보이지 않는다.
+function engagementSecondsFromRow(row: ReportRow) {
+  return averageOrNull(metricAt(row, 2), metricAt(row, 3));
+}
+
+// 이벤트 리포트 지표 순서: eventCount, eventValue
+function eventCountFromRow(row: ReportRow) {
+  return metricAt(row, 0);
+}
+
+// 스크롤 이벤트의 value(최대 스크롤 %) 합 ÷ 이벤트 수.
+function scrollPercentFromRow(row: ReportRow) {
+  return averageOrNull(metricAt(row, 1), metricAt(row, 0));
+}
+
+function optionalCell(value?: number | null) {
+  return value ?? "";
 }
 
 function formatGaDate(value?: string | null) {
@@ -238,9 +286,7 @@ function sheetValuesFromDailyRow(row: DailyRow) {
   ];
 }
 
-function getDateFromRow(row: {
-  dimensionValues?: Array<{ value?: string | null }>;
-}) {
+function getDateFromRow(row: ReportRow) {
   const dateValue = formatGaDate(row.dimensionValues?.[0]?.value);
 
   return normalizeDateCell(dateValue) ?? "";
@@ -265,13 +311,11 @@ function createExistingRowsByDate(rows: Array<Array<string | number>>) {
   return rowsByDate;
 }
 
-function createMetricsByDate(
-  rows: Array<{
-    dimensionValues?: Array<{ value?: string | null }>;
-    metricValues?: Array<{ value?: string | null }>;
-  }>,
+function createValuesByDate<T>(
+  rows: ReportRow[],
+  valueFromRow: (row: ReportRow) => T,
 ) {
-  const metricsByDate = new Map<string, DailyMetricValues>();
+  const valuesByDate = new Map<string, T>();
 
   rows.forEach((row) => {
     const date = getDateFromRow(row);
@@ -280,31 +324,10 @@ function createMetricsByDate(
       return;
     }
 
-    metricsByDate.set(date, metricsFromRow(row));
+    valuesByDate.set(date, valueFromRow(row));
   });
 
-  return metricsByDate;
-}
-
-function createButtonClicksByDate(
-  rows: Array<{
-    dimensionValues?: Array<{ value?: string | null }>;
-    metricValues?: Array<{ value?: string | null }>;
-  }>,
-) {
-  const buttonClicksByDate = new Map<string, number>();
-
-  rows.forEach((row) => {
-    const date = getDateFromRow(row);
-
-    if (!date) {
-      return;
-    }
-
-    buttonClicksByDate.set(date, eventCountFromRow(row));
-  });
-
-  return buttonClicksByDate;
+  return valuesByDate;
 }
 
 function analyticsSummaryFromDailyRow(
@@ -363,7 +386,7 @@ function createPagePathFilter(pagePath: string) {
   };
 }
 
-function createButtonClickFilter(pagePath: string) {
+function createEventFilter(pagePath: string, eventName: string) {
   return {
     andGroup: {
       expressions: [
@@ -373,13 +396,107 @@ function createButtonClickFilter(pagePath: string) {
             fieldName: "eventName",
             stringFilter: {
               matchType: "EXACT",
-              value: MAIN_PAGE_BUTTON_CLICK_EVENT_NAME,
+              value: eventName,
             },
           },
         },
       ],
     },
   };
+}
+
+const DATE_ORDER_BYS = [
+  {
+    dimension: {
+      dimensionName: "date",
+    },
+  },
+];
+
+function runPageReport(
+  analyticsData: AnalyticsDataClient,
+  config: AnalyticsConfig,
+  dateRanges: DateRange[],
+) {
+  return analyticsData.properties.runReport({
+    property: config.propertyName,
+    requestBody: {
+      dateRanges,
+      dimensions: [{ name: "date" }],
+      dimensionFilter: createPagePathFilter(config.pagePath),
+      metrics: [
+        { name: "screenPageViews" },
+        { name: "totalUsers" },
+        { name: "userEngagementDuration" },
+        { name: "engagedSessions" },
+      ],
+      orderBys: DATE_ORDER_BYS,
+    },
+  });
+}
+
+function runEventReport(
+  analyticsData: AnalyticsDataClient,
+  config: AnalyticsConfig,
+  dateRanges: DateRange[],
+  eventName: string,
+) {
+  return analyticsData.properties.runReport({
+    property: config.propertyName,
+    requestBody: {
+      dateRanges,
+      dimensions: [{ name: "date" }],
+      dimensionFilter: createEventFilter(config.pagePath, eventName),
+      metrics: [{ name: "eventCount" }, { name: "eventValue" }],
+      orderBys: DATE_ORDER_BYS,
+    },
+  });
+}
+
+async function getExistingDataRows(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  sheetName: string,
+) {
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: sheetRange(sheetName, `A${ANALYTICS_DATA_START_ROW}:D`),
+    valueRenderOption: "UNFORMATTED_VALUE",
+  });
+
+  return (data.values ?? []) as Array<Array<string | number>>;
+}
+
+// 사람이 헤더를 고쳐 쓴 경우를 존중하도록 비어 있을 때만 채운다.
+async function ensureEngagementHeaders(
+  sheets: SheetsClient,
+  spreadsheetId: string,
+  sheetName: string,
+) {
+  const range = sheetRange(
+    sheetName,
+    `${ENGAGEMENT_COLUMN}1:${SCROLL_DEPTH_COLUMN}2`,
+  );
+  const { data } = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range,
+  });
+  const hasHeader = (data.values ?? []).some((row) =>
+    row.some((cell) => String(cell ?? "").trim() !== ""),
+  );
+
+  if (hasHeader) {
+    return;
+  }
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range,
+    valueInputOption: "RAW",
+    requestBody: {
+      values: ENGAGEMENT_HEADER_VALUES,
+    },
+  });
 }
 
 export async function syncGaAnalyticsToSheets() {
@@ -408,40 +525,36 @@ export async function syncGaAnalyticsToSheets() {
       endDate: syncDates.at(-1) ?? syncDates[0],
     },
   ];
-  const orderBys = [
-    {
-      dimension: {
-        dimensionName: "date",
-      },
-    },
-  ];
 
-  const [pageReport, buttonClickReport] = await Promise.all([
-    analyticsData.properties.runReport({
-      property: config.propertyName,
-      requestBody: {
-        dateRanges,
-        dimensions: [{ name: "date" }],
-        dimensionFilter: createPagePathFilter(config.pagePath),
-        metrics: [{ name: "screenPageViews" }, { name: "totalUsers" }],
-        orderBys,
-      },
-    }),
-    analyticsData.properties.runReport({
-      property: config.propertyName,
-      requestBody: {
-        dateRanges,
-        dimensions: [{ name: "date" }],
-        dimensionFilter: createButtonClickFilter(config.pagePath),
-        metrics: [{ name: "eventCount" }],
-        orderBys,
-      },
-    }),
+  const [pageReport, buttonClickReport, scrollDepthReport] = await Promise.all([
+    runPageReport(analyticsData, config, dateRanges),
+    runEventReport(
+      analyticsData,
+      config,
+      dateRanges,
+      MAIN_PAGE_BUTTON_CLICK_EVENT_NAME,
+    ),
+    runEventReport(
+      analyticsData,
+      config,
+      dateRanges,
+      MAIN_PAGE_SCROLL_DEPTH_EVENT_NAME,
+    ),
   ]);
 
-  const metricsByDate = createMetricsByDate(pageReport.data.rows ?? []);
-  const buttonClicksByDate = createButtonClicksByDate(
+  const pageRows = pageReport.data.rows ?? [];
+  const metricsByDate = createValuesByDate(pageRows, metricsFromRow);
+  const engagementSecondsByDate = createValuesByDate(
+    pageRows,
+    engagementSecondsFromRow,
+  );
+  const buttonClicksByDate = createValuesByDate(
     buttonClickReport.data.rows ?? [],
+    eventCountFromRow,
+  );
+  const scrollPercentByDate = createValuesByDate(
+    scrollDepthReport.data.rows ?? [],
+    scrollPercentFromRow,
   );
   const dailyRows: DailyRow[] = syncDates.map((date) => {
     const rowMetrics = metricsByDate.get(date) ?? {
@@ -456,14 +569,11 @@ export async function syncGaAnalyticsToSheets() {
     };
   });
   const sheetName = await resolveAnalyticsSheetName(config);
-  const { data: existingData } = await sheets.spreadsheets.values.get({
-    spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, `A${ANALYTICS_DATA_START_ROW}:D`),
-    valueRenderOption: "UNFORMATTED_VALUE",
-  });
-  const existingRows = (existingData.values ?? []) as Array<
-    Array<string | number>
-  >;
+  const existingRows = await getExistingDataRows(
+    sheets,
+    config.spreadsheetId,
+    sheetName,
+  );
   const existingRowsByDate = createExistingRowsByDate(existingRows);
   const rowsToUpdate: Array<{ row: DailyRow; rowNumber: number }> = [];
   const rowsToAppend: DailyRow[] = [];
@@ -482,32 +592,40 @@ export async function syncGaAnalyticsToSheets() {
     rowsToAppend.push(row);
   });
 
-  if (rowsToUpdate.length > 0) {
-    await sheets.spreadsheets.values.batchUpdate({
-      spreadsheetId: config.spreadsheetId,
-      requestBody: {
-        data: rowsToUpdate.map(({ row, rowNumber }) => ({
+  const rowsToWrite = [
+    ...rowsToUpdate,
+    ...rowsToAppend.map((row, index) => ({
+      row,
+      rowNumber: ANALYTICS_DATA_START_ROW + existingRows.length + index,
+    })),
+  ];
+
+  await ensureEngagementHeaders(sheets, config.spreadsheetId, sheetName);
+  // E열(수동 입력)은 건너뛰고 A~D, F~G만 쓴다.
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId: config.spreadsheetId,
+    requestBody: {
+      data: rowsToWrite.flatMap(({ row, rowNumber }) => [
+        {
           range: sheetRange(sheetName, `A${rowNumber}:D${rowNumber}`),
           values: [sheetValuesFromDailyRow(row)],
-        })),
-        valueInputOption: "RAW",
-      },
-    });
-  }
-
-  if (rowsToAppend.length > 0) {
-    await sheets.spreadsheets.values.update({
-      spreadsheetId: config.spreadsheetId,
-      range: sheetRange(
-        sheetName,
-        `A${ANALYTICS_DATA_START_ROW + existingRows.length}`,
-      ),
+        },
+        {
+          range: sheetRange(
+            sheetName,
+            `${ENGAGEMENT_COLUMN}${rowNumber}:${SCROLL_DEPTH_COLUMN}${rowNumber}`,
+          ),
+          values: [
+            [
+              optionalCell(engagementSecondsByDate.get(row.date)),
+              optionalCell(scrollPercentByDate.get(row.date)),
+            ],
+          ],
+        },
+      ]),
       valueInputOption: "RAW",
-      requestBody: {
-        values: rowsToAppend.map(sheetValuesFromDailyRow),
-      },
-    });
-  }
+    },
+  });
 
   const syncedAt = new Date().toISOString();
   const summary = analyticsSummaryFromDailyRow(
@@ -529,6 +647,58 @@ export async function syncGaAnalyticsToSheets() {
   };
 }
 
+// 체류시간(F열)만 과거 날짜까지 채운다. 이미 기록된 A~D는 건드리지 않고,
+// 시트에 행이 없는 날짜는 추가하지 않는다. 스크롤 깊이는 수집 이전 데이터가 없어 제외한다.
+export async function backfillEngagementToSheets(startDate: string) {
+  const config = getAnalyticsConfig();
+  const analyticsData = getAnalyticsDataClient();
+  const sheets = getSheetsClient();
+
+  if (!config || !analyticsData || !sheets) {
+    return null;
+  }
+
+  const endDate = getKstDateString(0);
+
+  if (!endDate || startDate > endDate) {
+    return { startDate, endDate, updatedRowCount: 0 };
+  }
+
+  const pageReport = await runPageReport(analyticsData, config, [
+    { startDate, endDate },
+  ]);
+  const engagementSecondsByDate = createValuesByDate(
+    pageReport.data.rows ?? [],
+    engagementSecondsFromRow,
+  );
+  const sheetName = await resolveAnalyticsSheetName(config);
+  const existingRows = await getExistingDataRows(
+    sheets,
+    config.spreadsheetId,
+    sheetName,
+  );
+  const data = [...createExistingRowsByDate(existingRows)]
+    .filter(([date]) => date >= startDate && date <= endDate)
+    .map(([date, { rowNumber }]) => ({
+      range: sheetRange(sheetName, `${ENGAGEMENT_COLUMN}${rowNumber}`),
+      values: [[optionalCell(engagementSecondsByDate.get(date))]],
+    }));
+
+  await ensureEngagementHeaders(sheets, config.spreadsheetId, sheetName);
+
+  if (data.length > 0) {
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: config.spreadsheetId,
+      requestBody: {
+        data,
+        valueInputOption: "RAW",
+      },
+    });
+  }
+
+  return { startDate, endDate, updatedRowCount: data.length };
+}
+
 export async function getLatestAnalyticsSummary() {
   if (cachedSummary && cachedSummary.expiresAt > Date.now()) {
     return cachedSummary.value;
@@ -542,12 +712,11 @@ export async function getLatestAnalyticsSummary() {
   }
 
   const sheetName = await resolveAnalyticsSheetName(config);
-  const { data } = await sheets.spreadsheets.values.get({
-    spreadsheetId: config.spreadsheetId,
-    range: sheetRange(sheetName, `A${ANALYTICS_DATA_START_ROW}:D`),
-    valueRenderOption: "UNFORMATTED_VALUE",
-  });
-  const rows = (data.values ?? []) as Array<Array<string | number>>;
+  const rows = await getExistingDataRows(
+    sheets,
+    config.spreadsheetId,
+    sheetName,
+  );
   const rowsByDate = createExistingRowsByDate(rows);
   const dailyRow =
     [...getKstSyncDates()]
