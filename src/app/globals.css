@@ -28,7 +28,11 @@
     color: var(--color-text-body);
     background: var(--color-bg-white);
     line-height: 1.6;
+    /* container-type 때문에 body overflow가 viewport로 전파되지 않아
+       hidden이면 body가 스크롤 컨테이너가 되고 sticky 하단 CTA가 페이지 끝에 붙는다.
+       clip은 스크롤 컨테이너를 만들지 않는다(미지원 브라우저는 hidden으로 폴백). */
     overflow-x: hidden;
+    overflow-x: clip;
   }
 }
 

@@ -6,10 +6,11 @@ import MainPageAnalyticsEvents from "@/components/MainPageAnalyticsEvents";
 import DisclaimerSection from "@/components/DisclaimerSection";
 import FAQSection from "@/components/FAQSection";
 import ProcedureSection from "@/components/ProcedureSection";
+import StickyCtaBar from "@/components/StickyCtaBar";
 
 export default function Home() {
   return (
-    <main>
+    <main className="bg-bg-warm">
       <MainPageAnalyticsEvents />
       <HeroSection />
       <BarriersSection />
@@ -18,6 +19,7 @@ export default function Home() {
       <ProcedureSection />
       <FAQSection />
       <DisclaimerSection />
+      <StickyCtaBar />
     </main>
   );
 }

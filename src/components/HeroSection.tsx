@@ -1,6 +1,5 @@
 import Image from "next/image";
 
-import CtaButton from "@/components/CtaButton";
 import {
   HeroBadgeChip,
   MouseArrowIcon,
@@ -30,7 +29,7 @@ export default function HeroSection() {
 
         <HeroBadgeChip />
 
-        <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center justify-center pb-32 pt-14 text-center md:pb-28 md:pt-12">
+        <div className="mx-auto flex w-full max-w-[1100px] flex-1 flex-col items-center justify-center pb-42 pt-14 text-center md:pt-12">
           <h1 className="max-w-[860px] text-[26px] font-extrabold leading-[1.2] tracking-[-0.04em] text-text-dark md:text-[50px] md:leading-[1.1]">
             지금 너무 힘들다면,
             <br />
@@ -43,12 +42,10 @@ export default function HeroSection() {
             있습니다.
           </p>
           <ProjectInfoList className="mt-7" />
-          <div className="mt-7 md:mt-9">
-            <CtaButton>무료 상담 받으러 가기</CtaButton>
-          </div>
         </div>
 
-        <div className="pointer-events-none absolute bottom-7 left-1/2 -translate-x-1/2 md:bottom-10">
+        {/* 하단 고정 CTA(StickyCtaBar) 위에 오도록 띄운다. */}
+        <div className="pointer-events-none absolute bottom-25 left-1/2 -translate-x-1/2">
           <MouseArrowIcon className="h-[44px] w-[44px] md:h-[56px] md:w-[56px]" />
         </div>
       </div>
