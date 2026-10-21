@@ -208,8 +208,9 @@ function getKstDateString(dayOffset: number) {
   );
 }
 
+// GA가 하루 넘게 늦게 확정하는 날이 있어 그저께까지 다시 쓴다.
 function getKstSyncDates() {
-  return [getKstDateString(-1), getKstDateString(0)].filter(
+  return [getKstDateString(-2), getKstDateString(-1), getKstDateString(0)].filter(
     (date): date is string => Boolean(date),
   );
 }

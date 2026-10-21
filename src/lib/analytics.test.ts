@@ -53,7 +53,7 @@ function writtenData() {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  // KST 2026-10-21 12:00 → 동기화 대상은 10/20·10/21
+  // KST 2026-10-21 12:00 → 동기화 대상은 10/19·10/20·10/21
   jest.useFakeTimers().setSystemTime(new Date("2026-10-21T03:00:00Z"));
   process.env.GA_PROPERTY_ID = "527817023";
   process.env.GOOGLE_SHEETS_ANALYTICS_SHEET_GID = "1695159350";
@@ -73,11 +73,16 @@ beforeEach(() => {
 afterEach(() => jest.useRealTimers());
 
 describe("syncGaAnalyticsToSheets", () => {
-  it("writes A~D and F~G, skipping the manual E column", async () => {
-    mockSheet([["2026. 10. 20", 1, 1, 0]]);
+  it("rewrites the last three days in A~D and F~G, skipping the manual E column", async () => {
+    // 그저께(10/19)는 GA가 늦게 확정한 값으로 다시 쓰고, 오늘(10/21)은 새 행으로 붙인다.
+    mockSheet([
+      ["2026. 10. 19", 1422, 1350, 4],
+      ["2026. 10. 20", 1, 1, 0],
+    ]);
     mockReports({
       // screenPageViews, totalUsers, userEngagementDuration, engagedSessions
       page: [
+        { date: "20261019", metrics: [1840, 1601, 647, 95] },
         { date: "20261020", metrics: [100, 90, 450, 90] },
         { date: "20261021", metrics: [50, 40, 0, 0] },
       ],
@@ -88,13 +93,15 @@ describe("syncGaAnalyticsToSheets", () => {
 
     const result = await syncGaAnalyticsToSheets();
 
-    expect(result).toMatchObject({ updatedRowCount: 1, appendedRowCount: 1 });
+    expect(result).toMatchObject({ dailyRowCount: 3, updatedRowCount: 2, appendedRowCount: 1 });
     expect(writtenData()).toEqual([
-      { range: `'${TAB}'!A3:D3`, values: [["2026. 10. 20", 100, 90, 3]] },
-      { range: `'${TAB}'!F3:G3`, values: [[5, 37.5]] },
-      { range: `'${TAB}'!A4:D4`, values: [["2026. 10. 21", 50, 40, 0]] },
+      { range: `'${TAB}'!A3:D3`, values: [["2026. 10. 19", 1840, 1601, 0]] },
+      { range: `'${TAB}'!F3:G3`, values: [[6.8, ""]] },
+      { range: `'${TAB}'!A4:D4`, values: [["2026. 10. 20", 100, 90, 3]] },
+      { range: `'${TAB}'!F4:G4`, values: [[5, 37.5]] },
+      { range: `'${TAB}'!A5:D5`, values: [["2026. 10. 21", 50, 40, 0]] },
       // 참여 세션·스크롤 이벤트가 없으면 0이 아니라 빈칸
-      { range: `'${TAB}'!F4:G4`, values: [["", ""]] },
+      { range: `'${TAB}'!F5:G5`, values: [["", ""]] },
     ]);
   });
 
